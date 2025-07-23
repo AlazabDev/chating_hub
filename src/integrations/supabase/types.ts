@@ -84,6 +84,7 @@ export type Database = {
       }
       ai_messages: {
         Row: {
+          attachments: Json | null
           content: string
           conversation_id: string | null
           created_at: string
@@ -92,6 +93,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          attachments?: Json | null
           content: string
           conversation_id?: string | null
           created_at?: string
@@ -100,6 +102,7 @@ export type Database = {
           role: string
         }
         Update: {
+          attachments?: Json | null
           content?: string
           conversation_id?: string | null
           created_at?: string
@@ -202,6 +205,102 @@ export type Database = {
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backup_jobs: {
+        Row: {
+          backup_type: string
+          completed_at: string | null
+          created_at: string
+          drive_file_id: string | null
+          error_message: string | null
+          file_url: string | null
+          id: string
+          metadata: Json | null
+          scheduled_at: string
+          started_at: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          backup_type?: string
+          completed_at?: string | null
+          created_at?: string
+          drive_file_id?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          scheduled_at: string
+          started_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          backup_type?: string
+          completed_at?: string | null
+          created_at?: string
+          drive_file_id?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          id?: string
+          metadata?: Json | null
+          scheduled_at?: string
+          started_at?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_attachments: {
+        Row: {
+          conversation_id: string | null
+          created_at: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          message_id: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          message_id?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          message_id?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_attachments_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "ai_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -1157,7 +1256,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      schedule_user_backup: {
+        Args: { user_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       priority_level: "low" | "medium" | "high" | "urgent"

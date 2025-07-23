@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import FileAttachmentComponent from '@/components/Chat/FileAttachment';
 import { 
   Bot, 
   User, 
@@ -22,8 +23,20 @@ import {
   MessageSquare,
   Cpu,
   Brain,
-  Zap
+  Zap,
+  Paperclip,
+  Download,
+  File
 } from 'lucide-react';
+
+interface FileAttachment {
+  id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_url: string;
+  created_at: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -35,6 +48,7 @@ interface ChatMessage {
   action?: string;
   repository_context?: string;
   code_suggestions?: CodeSuggestion[];
+  attachments?: FileAttachment[];
 }
 
 interface CodeSuggestion {
@@ -61,6 +75,8 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   const [selectedRepository, setSelectedRepository] = useState<string>('');
   const [repositories, setRepositories] = useState<any[]>([]);
   const [activeContext, setActiveContext] = useState<any>(null);
+  const [currentAttachments, setCurrentAttachments] = useState<FileAttachment[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -124,7 +140,7 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
   };
 
   const handleSend = async () => {
-    if (!currentMessage.trim()) return;
+    if (!currentMessage.trim() && currentAttachments.length === 0) return;
 
     try {
       // إعداد السياق حسب النمط المحدد
@@ -145,8 +161,17 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
         };
       }
 
+      // إضافة المرفقات إلى السياق
+      if (currentAttachments.length > 0) {
+        context = {
+          ...context,
+          attachments: currentAttachments
+        };
+      }
+
       await onSendMessage(currentMessage, selectedModel, context);
       setCurrentMessage('');
+      setCurrentAttachments([]);
     } catch (error) {
       toast({
         title: "خطأ في الإرسال",
@@ -154,6 +179,40 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
         variant: "destructive"
       });
     }
+  };
+
+  const handleAttachmentAdded = (attachment: FileAttachment) => {
+    setCurrentAttachments([...currentAttachments, attachment]);
+  };
+
+  const handleAttachmentRemoved = (attachmentId: string) => {
+    setCurrentAttachments(currentAttachments.filter(att => att.id !== attachmentId));
+  };
+
+  const renderAttachments = (attachments?: FileAttachment[]) => {
+    if (!attachments || attachments.length === 0) return null;
+
+    return (
+      <div className="mt-2 flex flex-wrap gap-2">
+        {attachments.map((attachment) => (
+          <div
+            key={attachment.id}
+            className="flex items-center gap-2 bg-muted/50 px-2 py-1 rounded text-xs"
+          >
+            <File className="w-3 h-3" />
+            <span className="truncate max-w-[100px]">{attachment.file_name}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => window.open(attachment.file_url, '_blank')}
+              className="h-4 w-4 p-0"
+            >
+              <Download className="w-2 h-2" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const getSystemStatus = async () => {
@@ -322,6 +381,8 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
                     <p className="text-sm leading-relaxed">{message.content}</p>
                   )}
                   
+                  {renderAttachments(message.attachments)}
+                  
                   {message.code_suggestions && (
                     <div className="mt-3 space-y-2">
                       {message.code_suggestions.map((suggestion, index) => (
@@ -381,7 +442,16 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 border-t border-border bg-muted/30">
+      <div className="p-4 border-t border-border bg-muted/30 space-y-3">
+        {/* File Attachments */}
+        <FileAttachmentComponent
+          conversationId={currentConversationId}
+          attachments={currentAttachments}
+          onAttachmentAdded={handleAttachmentAdded}
+          onAttachmentRemoved={handleAttachmentRemoved}
+          disabled={isLoading}
+        />
+        
         <div className="flex gap-2">
           <Textarea
             value={currentMessage}
@@ -393,7 +463,7 @@ const EnhancedChatInterface: React.FC<EnhancedChatInterfaceProps> = ({
           />
           <Button
             onClick={handleSend}
-            disabled={isLoading || !currentMessage.trim()}
+            disabled={isLoading || (!currentMessage.trim() && currentAttachments.length === 0)}
             className="self-end bg-gradient-primary hover:opacity-90"
           >
             <Send className="w-4 h-4" />

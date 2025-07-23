@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.code-analyzer]
 verify_jwt = true
+
+[functions.google-drive-backup]
+verify_jwt = true
+
+[functions.backup-scheduler]
+verify_jwt = false

@@ -19,7 +19,8 @@ import { ConnectivitySettings } from '@/components/Settings/ConnectivitySettings
 import { ThemeSettings } from '@/components/Settings/ThemeSettings';
 import { LanguageSettings } from '@/components/Settings/LanguageSettings';
 import { AISettings } from '@/components/Settings/AISettings';
-import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi } from 'lucide-react';
+import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi, HardDrive } from 'lucide-react';
+import BackupSettings from '@/components/Settings/BackupSettings';
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -367,7 +368,7 @@ const Index = () => {
 
           <div className="overflow-y-auto max-h-[60vh] px-1">
             <Tabs defaultValue="ai" className="w-full">
-              <TabsList className="grid w-full grid-cols-8 text-xs mb-6 glass-card p-1">
+              <TabsList className="grid w-full grid-cols-9 text-xs mb-6 glass-card p-1">
                 <TabsTrigger value="ai" className="flex items-center gap-1 transition-all duration-200 hover-scale">
                   <Bot className="w-3 h-3" />
                   <span className="hidden md:inline">ذكاء اصطناعي</span>
@@ -399,6 +400,10 @@ const Index = () => {
                 <TabsTrigger value="production" className="flex items-center gap-1 transition-all duration-200 hover-scale">
                   <Rocket className="w-3 h-3" />
                   <span className="hidden md:inline">الإنتاج</span>
+                </TabsTrigger>
+                <TabsTrigger value="backup" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <HardDrive className="w-3 h-3" />
+                  <span className="hidden md:inline">النسخ الاحتياطي</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -547,6 +552,10 @@ const Index = () => {
 
             <TabsContent value="production">
               <ProductionConfig />
+            </TabsContent>
+
+            <TabsContent value="backup" className="space-y-4">
+              <BackupSettings />
             </TabsContent>
           </Tabs>
           </div>
