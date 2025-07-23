@@ -1,1 +1,10 @@
 project_id = "shindkpwyxpsexhhfsyg"
+
+[functions.repository-api]
+verify_jwt = false
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.code-analyzer]
+verify_jwt = true

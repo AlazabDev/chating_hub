@@ -55,6 +55,68 @@ export type Database = {
           },
         ]
       }
+      ai_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          model: string
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          model?: string
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          model?: string
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_messages: {
+        Row: {
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assigned_at: string | null
@@ -140,6 +202,106 @@ export type Database = {
             columns: ["uploaded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      code_analysis: {
+        Row: {
+          analysis_type: string
+          completed_at: string | null
+          id: string
+          issues_found: number | null
+          repository_id: string | null
+          results: Json | null
+          started_at: string
+          status: string | null
+          suggestions_count: number | null
+        }
+        Insert: {
+          analysis_type: string
+          completed_at?: string | null
+          id?: string
+          issues_found?: number | null
+          repository_id?: string | null
+          results?: Json | null
+          started_at?: string
+          status?: string | null
+          suggestions_count?: number | null
+        }
+        Update: {
+          analysis_type?: string
+          completed_at?: string | null
+          id?: string
+          issues_found?: number | null
+          repository_id?: string | null
+          results?: Json | null
+          started_at?: string
+          status?: string | null
+          suggestions_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_analysis_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      code_suggestions: {
+        Row: {
+          code_snippet: string | null
+          created_at: string
+          created_by_ai: boolean | null
+          description: string
+          file_path: string
+          id: string
+          priority: string | null
+          repository_id: string | null
+          status: string | null
+          suggested_fix: string | null
+          suggestion_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          code_snippet?: string | null
+          created_at?: string
+          created_by_ai?: boolean | null
+          description: string
+          file_path: string
+          id?: string
+          priority?: string | null
+          repository_id?: string | null
+          status?: string | null
+          suggested_fix?: string | null
+          suggestion_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          code_snippet?: string | null
+          created_at?: string
+          created_by_ai?: boolean | null
+          description?: string
+          file_path?: string
+          id?: string
+          priority?: string | null
+          repository_id?: string | null
+          status?: string | null
+          suggested_fix?: string | null
+          suggestion_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "code_suggestions_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
             referencedColumns: ["id"]
           },
         ]
