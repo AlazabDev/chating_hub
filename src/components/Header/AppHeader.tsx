@@ -42,12 +42,34 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onLanguageChange,
   currentLanguage
 }) => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark' || 
+             (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return true;
+  });
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-    // هنا يمكن إضافة منطق تغيير السمة
+    const newTheme = !isDarkMode;
+    setIsDarkMode(newTheme);
+    
+    if (typeof window !== 'undefined') {
+      const theme = newTheme ? 'dark' : 'light';
+      localStorage.setItem('theme', theme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+    }
   };
+
+  // تطبيق السمة عند التحميل
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const theme = isDarkMode ? 'dark' : 'light';
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+    }
+  }, [isDarkMode]);
 
   return (
     <header className="h-16 bg-gradient-card border-b border-border px-6 flex items-center justify-between shadow-card-custom">

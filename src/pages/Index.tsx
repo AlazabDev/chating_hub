@@ -12,7 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Key, Server, Database } from 'lucide-react';
+import { ProductionConfig } from '@/components/Production/ProductionConfig';
+import { Settings, Key, Server, Database, Rocket } from 'lucide-react';
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -222,7 +223,7 @@ const Index = () => {
           </DialogHeader>
 
           <Tabs defaultValue="api" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="api" className="flex items-center gap-2">
                 <Key className="w-4 h-4" />
                 API Keys
@@ -234,6 +235,10 @@ const Index = () => {
               <TabsTrigger value="erp" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 ERP
+              </TabsTrigger>
+              <TabsTrigger value="production" className="flex items-center gap-2">
+                <Rocket className="w-4 h-4" />
+                الإنتاج
               </TabsTrigger>
             </TabsList>
 
@@ -328,12 +333,36 @@ const Index = () => {
                 <CardHeader>
                   <CardTitle>إعدادات نظام ERP</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    إعدادات الاتصال بقاعدة بيانات ERP والوحدات ستتم إضافتها هنا.
-                  </p>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="erp-db-host">خادم قاعدة البيانات</Label>
+                    <Input
+                      id="erp-db-host"
+                      placeholder="localhost"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="erp-db-user">اسم المستخدم</Label>
+                      <Input
+                        id="erp-db-user"
+                        placeholder="erp_user"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="erp-db-pass">كلمة المرور</Label>
+                      <Input
+                        id="erp-db-pass"
+                        type="password"
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="production">
+              <ProductionConfig />
             </TabsContent>
           </Tabs>
 
