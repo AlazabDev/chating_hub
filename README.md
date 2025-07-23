@@ -1,73 +1,106 @@
-# Welcome to your Lovable project
+# DeepSec Pilot - مساعد الذكاء الاصطناعي للتطوير
 
-## Project info
+🚀 **نظام متقدم لإدارة المشاريع والتطوير بدعم الذكاء الاصطناعي**
 
-**URL**: https://lovable.dev/projects/d4a15231-9530-4fea-841c-726b8986a1da
+## نظرة عامة
 
-## How can I edit this code?
+DeepSec Pilot هو تطبيق ويب متقدم يوفر بيئة شاملة لإدارة المشاريع البرمجية والتطوير مع دعم الذكاء الاصطناعي. يتميز التطبيق بواجهة حديثة وأدوات قوية للمطورين ومديري المشاريع.
 
-There are several ways of editing your application.
+## الميزات الرئيسية
 
-**Use Lovable**
+### 🤖 الذكاء الاصطناعي
+- دعم متعدد للنماذج: DeepSeek و Azure OpenAI
+- محادثة ذكية مع السياق
+- اقتراحات الكود التلقائية
+- تحليل وتحسين الكود
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/d4a15231-9530-4fea-841c-726b8986a1da) and start prompting.
+### 📁 إدارة المستودعات
+- إدارة مستودعات Frappe متعددة
+- تتبع العمليات والتبعيات
+- مزامنة Git تلقائية
+- تحليل الكود المستمر
 
-Changes made via Lovable will be committed automatically to this repo.
+### 📊 مراقبة الأداء
+- مراقبة الأداء الحي
+- تحليل استخدام الموارد
+- تقارير مفصلة
+- تنبيهات ذكية
 
-**Use your preferred IDE**
+### 🎨 واجهة متقدمة
+- تصميم بسيط وطبيعي
+- دعم الوضع الليلي والنهاري
+- دعم متعدد اللغات (العربية والإنجليزية)
+- تجربة مستخدم محسنة
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## التقنيات المستخدمة
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend:** React 18, TypeScript, Tailwind CSS
+- **Backend:** Supabase (PostgreSQL, Edge Functions)
+- **UI Components:** Radix UI, Lucide Icons
+- **Styling:** Tailwind CSS مع نظام ألوان طبيعية
+- **Build Tool:** Vite
+- **State Management:** React Hooks
 
-Follow these steps:
+## التثبيت والإعداد
+
+### متطلبات النظام
+- Node.js 18+ 
+- npm أو yarn
+- حساب Supabase
+
+### خطوات التثبيت
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# 1. استنساخ المشروع
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# 2. الانتقال للمجلد
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. تثبيت التبعيات
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. تشغيل التطبيق
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## الإعداد والتكوين
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### إعداد الذكاء الاصطناعي
 
-**Use GitHub Codespaces**
+1. **DeepSeek API**
+   - احصل على API Key من [DeepSeek Platform](https://platform.deepseek.com)
+   - أدخل المفتاح في إعدادات التطبيق
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+2. **Azure OpenAI**
+   - إنشاء مورد Azure OpenAI
+   - أدخل Endpoint, API Key, و Deployment Name
 
-## What technologies are used for this project?
+### الأمان والحماية
 
-This project is built with:
+- جميع البيانات محمية بـ Row Level Security (RLS)
+- كل مستخدم يصل فقط لبياناته
+- API Keys محفوظة بشكل آمن في Supabase Secrets
+- تشفير البيانات في النقل والتخزين
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## النشر
 
-## How can I deploy this project?
+### نشر مع Lovable
+افتح [Lovable](https://lovable.dev/projects/d4a15231-9530-4fea-841c-726b8986a1da) واضغط Share → Publish
 
-Simply open [Lovable](https://lovable.dev/projects/d4a15231-9530-4fea-841c-726b8986a1da) and click on Share -> Publish.
+### ربط نطاق مخصص
+انتقل إلى Project > Settings > Domains واضغط Connect Domain
 
-## Can I connect a custom domain to my Lovable project?
+## الدعم والمساعدة
 
-Yes, you can!
+- **التطوير المحلي:** استخدم `npm run dev`
+- **المشاكل:** استخدم GitHub Issues
+- **التوثيق:** راجع [دليل Lovable](https://docs.lovable.dev)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## الترخيص
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+مشروع مفتوح المصدر - راجع ملف LICENSE للتفاصيل
+
+---
+
+🌟 **للحصول على أفضل تجربة، تأكد من تكوين API keys في الإعدادات**

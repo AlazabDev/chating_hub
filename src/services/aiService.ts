@@ -51,61 +51,15 @@ export class AIService {
 
     const systemPrompt = this.buildSystemPrompt(context);
     
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.config.deepseekApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: message
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        stream: false
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`DeepSeek API Error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content || 'لم أتمكن من الحصول على رد';
-
-    return {
-      content,
-      model: 'deepseek',
-      action: this.extractActionFromResponse(content)
-    };
-  }
-
-  private async sendToAzureOpenAI(message: string, context?: any): Promise<AIResponse> {
-    if (!this.config.azureOpenAIConfig) {
-      throw new Error('Azure OpenAI not configured');
-    }
-
-    const { endpoint, apiKey, deploymentName } = this.config.azureOpenAIConfig;
-    const systemPrompt = this.buildSystemPrompt(context);
-
-    const response = await fetch(
-      `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`,
-      {
+    try {
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'api-key': apiKey,
+          'Authorization': `Bearer ${this.config.deepseekApiKey}`,
         },
         body: JSON.stringify({
+          model: 'deepseek-chat',
           messages: [
             {
               role: 'system',
@@ -120,21 +74,95 @@ export class AIService {
           max_tokens: 4000,
           stream: false
         }),
-      }
-    );
+      });
 
-    if (!response.ok) {
-      throw new Error(`Azure OpenAI API Error: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`DeepSeek API Error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid response format from DeepSeek');
+      }
+
+      const content = data.choices[0].message.content || 'لم أتمكن من الحصول على رد';
+
+      return {
+        content,
+        model: 'deepseek',
+        action: this.extractActionFromResponse(content)
+      };
+    } catch (error) {
+      console.error('DeepSeek Error Details:', error);
+      throw new Error(`DeepSeek Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  private async sendToAzureOpenAI(message: string, context?: any): Promise<AIResponse> {
+    if (!this.config.azureOpenAIConfig) {
+      throw new Error('Azure OpenAI not configured');
     }
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content || 'لم أتمكن من الحصول على رد';
+    const { endpoint, apiKey, deploymentName } = this.config.azureOpenAIConfig;
+    
+    // التحقق من صحة المعاملات
+    if (!endpoint || !apiKey || !deploymentName) {
+      throw new Error('Azure OpenAI configuration incomplete');
+    }
 
-    return {
-      content,
-      model: 'azure-openai',
-      action: this.extractActionFromResponse(content)
-    };
+    const systemPrompt = this.buildSystemPrompt(context);
+
+    try {
+      const response = await fetch(
+        `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': apiKey,
+          },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 4000,
+            stream: false
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Azure OpenAI API Error (${response.status}): ${errorText || response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+        throw new Error('Invalid response format from Azure OpenAI');
+      }
+
+      const content = data.choices[0].message.content || 'لم أتمكن من الحصول على رد';
+
+      return {
+        content,
+        model: 'azure-openai',
+        action: this.extractActionFromResponse(content)
+      };
+    } catch (error) {
+      console.error('Azure OpenAI Error Details:', error);
+      throw new Error(`Azure OpenAI Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private buildSystemPrompt(context?: any): string {
