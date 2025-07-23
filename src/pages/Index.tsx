@@ -15,6 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductionConfig } from '@/components/Production/ProductionConfig';
+import { DeploymentStatus } from '@/components/Production/DeploymentStatus';
 import { ConnectivitySettings } from '@/components/Settings/ConnectivitySettings';
 import { ThemeSettings } from '@/components/Settings/ThemeSettings';
 import { LanguageSettings } from '@/components/Settings/LanguageSettings';
@@ -41,6 +42,12 @@ const Index = () => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [deploymentStatus, setDeploymentStatus] = useState({
+    isReady: false,
+    errors: [] as string[],
+    warnings: [] as string[],
+    lastChecked: new Date()
+  });
 
   // إعدادات شاملة للتطبيق
   const [apiSettings, setApiSettings] = useState({
@@ -196,37 +203,109 @@ const Index = () => {
   }, []);
 
   const initializeAIService = async (settings: typeof apiSettings) => {
-    const config: AIServiceConfig = {};
-    
-    if (settings.deepseekApiKey) {
-      config.deepseekApiKey = settings.deepseekApiKey;
+    try {
+      const config: AIServiceConfig = {};
+      
+      if (settings.deepseekApiKey) {
+        config.deepseekApiKey = settings.deepseekApiKey;
+      }
+      
+      if (settings.azureEndpoint && settings.azureApiKey && settings.azureDeploymentName) {
+        config.azureOpenAIConfig = {
+          endpoint: settings.azureEndpoint,
+          apiKey: settings.azureApiKey,
+          deploymentName: settings.azureDeploymentName
+        };
+      }
+
+      const service = new AIService(config);
+      setAiService(service);
+
+      // اختبار الاتصالات مع معالجة الأخطاء
+      const connections = { ...connectionStatus };
+      
+      if (config.deepseekApiKey) {
+        try {
+          connections.deepseek = await service.testConnection('deepseek');
+          if (connections.deepseek) {
+            toast({
+              title: "DeepSeek متصل",
+              description: "تم الاتصال بنجاح مع DeepSeek API",
+            });
+          }
+        } catch (error) {
+          connections.deepseek = false;
+          console.warn('DeepSeek connection failed:', error);
+        }
+      }
+      
+      if (config.azureOpenAIConfig) {
+        try {
+          connections.azureOpenAI = await service.testConnection('azure-openai');
+          if (connections.azureOpenAI) {
+            toast({
+              title: "Azure OpenAI متصل",
+              description: "تم الاتصال بنجاح مع Azure OpenAI",
+            });
+          }
+        } catch (error) {
+          connections.azureOpenAI = false;
+          console.warn('Azure OpenAI connection failed:', error);
+        }
+      }
+      
+      connections.server = true;
+      setConnectionStatus(connections);
+
+      // تحديد النموذج الافتراضي بناءً على ما هو متاح
+      if (connections.deepseek && !connections.azureOpenAI) {
+        setAIExtendedSettings(prev => ({ ...prev, defaultModel: 'deepseek' }));
+      } else if (connections.azureOpenAI && !connections.deepseek) {
+        setAIExtendedSettings(prev => ({ ...prev, defaultModel: 'azure-openai' }));
+      }
+
+      // تحديث حالة النشر
+      checkDeploymentReadiness(connections);
+
+    } catch (error) {
+      console.error('Failed to initialize AI service:', error);
+      toast({
+        title: "خطأ في التهيئة",
+        description: "فشل في تهيئة خدمة الذكاء الاصطناعي",
+        variant: "destructive"
+      });
     }
-    
-    if (settings.azureEndpoint && settings.azureApiKey && settings.azureDeploymentName) {
-      config.azureOpenAIConfig = {
-        endpoint: settings.azureEndpoint,
-        apiKey: settings.azureApiKey,
-        deploymentName: settings.azureDeploymentName
-      };
+  };
+
+  const checkDeploymentReadiness = (connections: typeof connectionStatus) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // فحص الاتصالات الأساسية
+    if (!connections.deepseek && !connections.azureOpenAI) {
+      errors.push('لا يوجد اتصال بأي خدمة ذكاء اصطناعي');
     }
 
-    const service = new AIService(config);
-    setAiService(service);
+    // فحص الإعدادات
+    if (!isSettingsValid()) {
+      errors.push('إعدادات API غير مكتملة');
+    }
 
-    // اختبار الاتصالات
-    const connections = { ...connectionStatus };
-    
-    if (config.deepseekApiKey) {
-      connections.deepseek = await service.testConnection('deepseek');
+    // تحذيرات للتحسين
+    if (!connections.deepseek && connections.azureOpenAI) {
+      warnings.push('Azure OpenAI متصل لكن يواجه مشاكل في المصادقة');
     }
-    
-    if (config.azureOpenAIConfig) {
-      connections.azureOpenAI = await service.testConnection('azure-openai');
+
+    if (!connectivitySettings.gitHub.token) {
+      warnings.push('رمز GitHub غير مكوّن');
     }
-    
-    connections.server = true; // سيتم تحديثه حسب حالة السيرفر الفعلية
-    
-    setConnectionStatus(connections);
+
+    setDeploymentStatus({
+      isReady: errors.length === 0,
+      errors,
+      warnings,
+      lastChecked: new Date()
+    });
   };
 
   const handleSendMessage = async (content: string, model: 'deepseek' | 'azure-openai', context?: any) => {
@@ -630,7 +709,13 @@ const Index = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="production">
+            <TabsContent value="production" className="space-y-6">
+              <DeploymentStatus
+                isReady={deploymentStatus.isReady}
+                errors={deploymentStatus.errors}
+                warnings={deploymentStatus.warnings}
+                lastChecked={deploymentStatus.lastChecked}
+              />
               <ProductionConfig />
             </TabsContent>
 

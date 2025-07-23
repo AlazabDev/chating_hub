@@ -70,6 +70,115 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Glass effect utilities */
+  .glass-card {
+    @apply bg-background/70 backdrop-blur-lg border border-border/50 shadow-lg;
+  }
+  
+  .glass-card-strong {
+    @apply bg-background/90 backdrop-blur-xl border border-border/60 shadow-xl;
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .hover-scale {
+    transition: transform 0.2s ease;
+  }
+  
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  /* Enhanced sidebar */
+  .sidebar-enhanced {
+    @apply w-80 bg-sidebar-background/90 backdrop-blur-lg border-r border-sidebar-border/50 shadow-xl;
+  }
+
+  /* Enhanced tabs */
+  .tab-enhanced {
+    @apply relative overflow-hidden;
+  }
+  
+  .tab-enhanced.active::after {
+    content: '';
+    @apply absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary via-accent to-primary;
+  }
+
+  /* Production ready styles */
+  .production-ready {
+    @apply bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20;
+    @apply border border-green-200 dark:border-green-800/50;
+  }
+  
+  .deployment-status {
+    @apply flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .deployment-status.ready {
+    @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+  }
+  
+  .deployment-status.pending {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+  }
+  
+  .deployment-status.error {
+    @apply bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Production build optimizations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
