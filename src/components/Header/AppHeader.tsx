@@ -20,8 +20,12 @@ import {
   Wifi,
   WifiOff,
   Database,
-  Server
+  Server,
+  Search,
+  Bell
 } from 'lucide-react';
+import NotificationCenter from '@/components/Notifications/NotificationCenter';
+import GlobalSearch from '@/components/Search/GlobalSearch';
 
 interface ConnectionStatus {
   deepseek: boolean;
@@ -49,6 +53,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     }
     return true;
   });
+  
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3); // Mock count
 
   const toggleTheme = () => {
     const newTheme = !isDarkMode;
@@ -130,6 +138,31 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
         {/* Control Buttons - Enhanced */}
         <div className="flex items-center gap-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          {/* Global Search */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSearch(true)}
+            className="btn-ghost-enhanced hover-scale relative"
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+
+          {/* Notifications */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowNotifications(true)}
+            className="btn-ghost-enhanced hover-scale relative"
+          >
+            <Bell className="w-4 h-4" />
+            {notificationCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 text-xs p-0 flex items-center justify-center bg-destructive text-destructive-foreground">
+                {notificationCount > 9 ? '9+' : notificationCount}
+              </Badge>
+            )}
+          </Button>
+
           {/* Language Toggle */}
           <Button
             variant="ghost"
@@ -204,6 +237,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Modals */}
+      <NotificationCenter 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
+      
+      <GlobalSearch 
+        isOpen={showSearch} 
+        onClose={() => setShowSearch(false)}
+        onResultSelect={(result) => {
+          console.log('Selected result:', result);
+          // Handle result selection
+        }}
+      />
     </header>
   );
 };

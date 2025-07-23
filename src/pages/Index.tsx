@@ -19,8 +19,12 @@ import { ConnectivitySettings } from '@/components/Settings/ConnectivitySettings
 import { ThemeSettings } from '@/components/Settings/ThemeSettings';
 import { LanguageSettings } from '@/components/Settings/LanguageSettings';
 import { AISettings } from '@/components/Settings/AISettings';
-import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi, HardDrive } from 'lucide-react';
+import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi, HardDrive, Activity, BarChart3 } from 'lucide-react';
 import BackupSettings from '@/components/Settings/BackupSettings';
+import PerformanceMonitor from '@/components/Analytics/PerformanceMonitor';
+import { useKeyboardShortcuts, createDefaultShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import ShortcutsHelper from '@/components/Layout/ShortcutsHelper';
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -28,12 +32,15 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<'ar' | 'en'>('ar');
   const [aiService, setAiService] = useState<AIService | null>(null);
-  const [activeTab, setActiveTab] = useState<'chat' | 'repositories'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'repositories' | 'performance'>('chat');
   const [connectionStatus, setConnectionStatus] = useState({
     deepseek: false,
     azureOpenAI: false,
     server: false
   });
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // إعدادات شاملة للتطبيق
   const [apiSettings, setApiSettings] = useState({
@@ -92,6 +99,59 @@ const Index = () => {
   });
 
   const { toast } = useToast();
+
+  // Auto-save settings
+  useAutoSave({
+    data: {
+      api: apiSettings,
+      connectivity: connectivitySettings,
+      theme: themeSettings,
+      language: languageSettings,
+      aiExtended: aiExtendedSettings
+    },
+    onSave: async (data) => {
+      localStorage.setItem('deepsec-pilot-settings', JSON.stringify(data.api));
+      localStorage.setItem('deepsec-pilot-connectivity', JSON.stringify(data.connectivity));
+      localStorage.setItem('deepsec-pilot-theme', JSON.stringify(data.theme));
+      localStorage.setItem('deepsec-pilot-language', JSON.stringify(data.language));
+      localStorage.setItem('deepsec-pilot-ai-extended', JSON.stringify(data.aiExtended));
+    },
+    delay: 3000,
+    key: 'app-settings'
+  });
+
+  // Keyboard shortcuts
+  const shortcuts = createDefaultShortcuts({
+    openSearch: () => setShowSearch(true),
+    openNotifications: () => setShowNotifications(true),
+    openSettings: () => setShowSettings(true),
+    toggleTheme: () => {
+      const newTheme = themeSettings.mode === 'dark' ? 'light' : 'dark';
+      setThemeSettings(prev => ({ ...prev, mode: newTheme }));
+    },
+    switchToChat: () => setActiveTab('chat'),
+    switchToRepositories: () => setActiveTab('repositories'),
+    switchToPerformance: () => setActiveTab('performance'),
+    newConversation: () => {
+      setMessages([]);
+      toast({
+        title: "محادثة جديدة",
+        description: "تم بدء محادثة جديدة"
+      });
+    }
+  });
+
+  useKeyboardShortcuts({ 
+    shortcuts: [
+      ...shortcuts,
+      {
+        key: '?',
+        action: () => setShowShortcuts(true),
+        description: 'عرض اختصارات لوحة المفاتيح',
+        category: 'general'
+      }
+    ]
+  });
 
   useEffect(() => {
     // تحميل الإعدادات المحفوظة
@@ -318,12 +378,22 @@ const Index = () => {
               <Button
                 variant={activeTab === 'repositories' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('repositories')}
-                className={`tab-enhanced rounded-none px-6 py-3 transition-all duration-300 ${
+                className={`tab-enhanced rounded-none border-r border-border/30 px-6 py-3 transition-all duration-300 ${
                   activeTab === 'repositories' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
                 }`}
               >
                 <GitBranch className="w-4 h-4 ml-2" />
                 <span className="font-medium">إدارة المستودعات</span>
+              </Button>
+              <Button
+                variant={activeTab === 'performance' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('performance')}
+                className={`tab-enhanced rounded-none px-6 py-3 transition-all duration-300 ${
+                  activeTab === 'performance' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
+                }`}
+              >
+                <Activity className="w-4 h-4 ml-2" />
+                <span className="font-medium">مراقب الأداء</span>
               </Button>
             </div>
           </div>
@@ -340,10 +410,16 @@ const Index = () => {
                   />
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'repositories' ? (
               <div className="h-full p-6 animate-fade-in">
                 <div className="h-full glass-card rounded-xl overflow-hidden">
                   <RepositoryManager />
+                </div>
+              </div>
+            ) : (
+              <div className="h-full p-6 animate-fade-in">
+                <div className="h-full glass-card rounded-xl overflow-hidden">
+                  <PerformanceMonitor />
                 </div>
               </div>
             )}
@@ -368,7 +444,7 @@ const Index = () => {
 
           <div className="overflow-y-auto max-h-[60vh] px-1">
             <Tabs defaultValue="ai" className="w-full">
-              <TabsList className="grid w-full grid-cols-9 text-xs mb-6 glass-card p-1">
+              <TabsList className="grid w-full grid-cols-10 text-xs mb-6 glass-card p-1">
                 <TabsTrigger value="ai" className="flex items-center gap-1 transition-all duration-200 hover-scale">
                   <Bot className="w-3 h-3" />
                   <span className="hidden md:inline">ذكاء اصطناعي</span>
@@ -404,6 +480,10 @@ const Index = () => {
                 <TabsTrigger value="backup" className="flex items-center gap-1 transition-all duration-200 hover-scale">
                   <HardDrive className="w-3 h-3" />
                   <span className="hidden md:inline">النسخ الاحتياطي</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <BarChart3 className="w-3 h-3" />
+                  <span className="hidden md:inline">التحليلات</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -557,7 +637,11 @@ const Index = () => {
             <TabsContent value="backup" className="space-y-4">
               <BackupSettings />
             </TabsContent>
-          </Tabs>
+
+            <TabsContent value="analytics" className="space-y-4">
+              <PerformanceMonitor />
+            </TabsContent>
+            </Tabs>
           </div>
 
           <div className="flex justify-end gap-2 pt-4 border-t border-border/30">
@@ -578,6 +662,13 @@ const Index = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Shortcuts Helper */}
+      <ShortcutsHelper
+        isOpen={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+        shortcuts={shortcuts}
+      />
     </div>
   );
 };
