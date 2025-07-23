@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChatInterface, ChatMessage } from '@/components/Chat/ChatInterface';
+import EnhancedChatInterface from '@/components/AI/EnhancedChatInterface';
+import RepositoryManager from '@/components/Repository/RepositoryManager';
 import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
 import { AppHeader } from '@/components/Header/AppHeader';
 import { AIService, AIServiceConfig } from '@/services/aiService';
@@ -13,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductionConfig } from '@/components/Production/ProductionConfig';
-import { Settings, Key, Server, Database, Rocket } from 'lucide-react';
+import { Settings, Key, Server, Database, Rocket, GitBranch, Bot } from 'lucide-react';
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -21,6 +23,7 @@ const Index = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<'ar' | 'en'>('ar');
   const [aiService, setAiService] = useState<AIService | null>(null);
+  const [activeTab, setActiveTab] = useState<'chat' | 'repositories'>('chat');
   const [connectionStatus, setConnectionStatus] = useState({
     deepseek: false,
     azureOpenAI: false,
@@ -83,7 +86,7 @@ const Index = () => {
     setConnectionStatus(connections);
   };
 
-  const handleSendMessage = async (content: string, model: 'deepseek' | 'azure-openai') => {
+  const handleSendMessage = async (content: string, model: 'deepseek' | 'azure-openai', context?: any) => {
     if (!aiService) {
       toast({
         title: "خطأ في الإعداد",
@@ -104,7 +107,7 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      const response = await aiService.sendMessage(content, model);
+      const response = await aiService.sendMessage(content, model, context);
       
       const aiMessage: ChatMessage = {
         id: Date.now().toString() + '_ai',
@@ -202,13 +205,44 @@ const Index = () => {
           onCommandExecute={handleCommandExecute}
         />
 
-        {/* Chat Interface */}
-        <div className="flex-1 p-4">
-          <ChatInterface
-            onSendMessage={handleSendMessage}
-            messages={messages}
-            isLoading={isLoading}
-          />
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Tab Navigation */}
+          <div className="border-b border-border bg-muted/30">
+            <div className="flex">
+              <Button
+                variant={activeTab === 'chat' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('chat')}
+                className="rounded-none border-r"
+              >
+                <Bot className="w-4 h-4 ml-2" />
+                مساعد الذكاء الاصطناعي
+              </Button>
+              <Button
+                variant={activeTab === 'repositories' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('repositories')}
+                className="rounded-none"
+              >
+                <GitBranch className="w-4 h-4 ml-2" />
+                إدارة المستودعات
+              </Button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'chat' ? (
+              <div className="h-full p-4">
+                <EnhancedChatInterface
+                  onSendMessage={handleSendMessage}
+                  messages={messages}
+                  isLoading={isLoading}
+                />
+              </div>
+            ) : (
+              <RepositoryManager />
+            )}
+          </div>
         </div>
       </div>
 
@@ -223,10 +257,14 @@ const Index = () => {
           </DialogHeader>
 
           <Tabs defaultValue="api" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="api" className="flex items-center gap-2">
                 <Key className="w-4 h-4" />
                 API Keys
+              </TabsTrigger>
+              <TabsTrigger value="repositories" className="flex items-center gap-2">
+                <GitBranch className="w-4 h-4" />
+                المستودعات
               </TabsTrigger>
               <TabsTrigger value="server" className="flex items-center gap-2">
                 <Server className="w-4 h-4" />
@@ -315,15 +353,76 @@ const Index = () => {
               </Card>
             </TabsContent>
 
+            <TabsContent value="repositories" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>إعدادات المستودعات</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="default-branch">الفرع الافتراضي</Label>
+                    <Input
+                      id="default-branch"
+                      placeholder="main"
+                      defaultValue="main"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="auto-sync">المزامنة التلقائية</Label>
+                    <div className="flex items-center space-x-2">
+                      <input type="checkbox" id="auto-sync" className="rounded" />
+                      <Label htmlFor="auto-sync" className="text-sm">تمكين المزامنة التلقائية كل ساعة</Label>
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="workspace-path">مسار مساحة العمل</Label>
+                    <Input
+                      id="workspace-path"
+                      placeholder="/opt/frappe-bench"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="server" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>إعدادات السيرفر</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    إعدادات الاتصال بالسيرفر وتنفيذ الأوامر ستتم إضافتها هنا.
-                  </p>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label htmlFor="server-host">عنوان السيرفر</Label>
+                    <Input
+                      id="server-host"
+                      placeholder="localhost"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="ssh-user">مستخدم SSH</Label>
+                      <Input
+                        id="ssh-user"
+                        placeholder="frappe"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ssh-port">منفذ SSH</Label>
+                      <Input
+                        id="ssh-port"
+                        placeholder="22"
+                        type="number"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="ssh-key">مفتاح SSH</Label>
+                    <Textarea
+                      id="ssh-key"
+                      placeholder="-----BEGIN PRIVATE KEY-----"
+                      className="font-mono text-sm"
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

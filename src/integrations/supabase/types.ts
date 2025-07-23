@@ -768,6 +768,142 @@ export type Database = {
         }
         Relationships: []
       }
+      repositories: {
+        Row: {
+          branch: string | null
+          created_at: string
+          description: string | null
+          frappe_type: string
+          git_url: string | null
+          id: string
+          last_sync: string | null
+          local_path: string | null
+          manager_id: string | null
+          name: string
+          settings: Json | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch?: string | null
+          created_at?: string
+          description?: string | null
+          frappe_type: string
+          git_url?: string | null
+          id?: string
+          last_sync?: string | null
+          local_path?: string | null
+          manager_id?: string | null
+          name: string
+          settings?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch?: string | null
+          created_at?: string
+          description?: string | null
+          frappe_type?: string
+          git_url?: string | null
+          id?: string
+          last_sync?: string | null
+          local_path?: string | null
+          manager_id?: string | null
+          name?: string
+          settings?: Json | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      repository_dependencies: {
+        Row: {
+          dependency_name: string
+          dependency_type: string
+          dependency_version: string | null
+          id: string
+          installed_version: string | null
+          is_required: boolean | null
+          repository_id: string | null
+          status: string | null
+        }
+        Insert: {
+          dependency_name: string
+          dependency_type: string
+          dependency_version?: string | null
+          id?: string
+          installed_version?: string | null
+          is_required?: boolean | null
+          repository_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          dependency_name?: string
+          dependency_type?: string
+          dependency_version?: string | null
+          id?: string
+          installed_version?: string | null
+          is_required?: boolean | null
+          repository_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repository_dependencies_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      repository_operations: {
+        Row: {
+          completed_at: string | null
+          id: string
+          initiated_by: string | null
+          logs: string | null
+          operation_type: string
+          parameters: Json | null
+          repository_id: string | null
+          result: Json | null
+          started_at: string | null
+          status: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          logs?: string | null
+          operation_type: string
+          parameters?: Json | null
+          repository_id?: string | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          logs?: string | null
+          operation_type?: string
+          parameters?: Json | null
+          repository_id?: string | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repository_operations_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       request_status_log: {
         Row: {
           changed_by: string | null
