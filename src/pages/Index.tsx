@@ -15,7 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductionConfig } from '@/components/Production/ProductionConfig';
-import { Settings, Key, Server, Database, Rocket, GitBranch, Bot } from 'lucide-react';
+import { ConnectivitySettings } from '@/components/Settings/ConnectivitySettings';
+import { ThemeSettings } from '@/components/Settings/ThemeSettings';
+import { LanguageSettings } from '@/components/Settings/LanguageSettings';
+import { AISettings } from '@/components/Settings/AISettings';
+import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi } from 'lucide-react';
 
 const Index = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -30,7 +34,7 @@ const Index = () => {
     server: false
   });
 
-  // إعدادات API
+  // إعدادات شاملة للتطبيق
   const [apiSettings, setApiSettings] = useState({
     deepseekApiKey: '',
     azureEndpoint: '',
@@ -38,17 +42,95 @@ const Index = () => {
     azureDeploymentName: ''
   });
 
+  const [connectivitySettings, setConnectivitySettings] = useState({
+    gitHub: {
+      token: '',
+      username: '',
+      autoSync: false
+    },
+    drive: {
+      googleDrive: {
+        clientId: '',
+        clientSecret: '',
+        enabled: false
+      },
+      oneDrive: {
+        clientId: '',
+        clientSecret: '',
+        enabled: false
+      }
+    }
+  });
+
+  const [themeSettings, setThemeSettings] = useState({
+    mode: 'dark' as 'light' | 'dark' | 'system',
+    colorScheme: 'blue' as 'blue' | 'green' | 'purple' | 'orange' | 'pink',
+    fontSize: 'medium' as 'small' | 'medium' | 'large',
+    borderRadius: 'medium' as 'none' | 'small' | 'medium' | 'large'
+  });
+
+  const [languageSettings, setLanguageSettings] = useState({
+    language: 'ar' as 'ar' | 'en' | 'fr' | 'es',
+    direction: 'rtl' as 'rtl' | 'ltr',
+    dateFormat: 'dd/mm/yyyy' as 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd',
+    timeFormat: '24h' as '12h' | '24h',
+    autoDetect: false
+  });
+
+  const [aiExtendedSettings, setAIExtendedSettings] = useState({
+    deepseekApiKey: '',
+    azureEndpoint: '',
+    azureApiKey: '',
+    azureDeploymentName: '',
+    defaultModel: 'deepseek' as 'deepseek' | 'azure-openai',
+    temperature: 1,
+    maxTokens: 2000,
+    autoSave: true,
+    enableStreaming: true,
+    enableCodeExecution: false
+  });
+
   const { toast } = useToast();
 
   useEffect(() => {
     // تحميل الإعدادات المحفوظة
     const savedSettings = localStorage.getItem('deepsec-pilot-settings');
+    const savedConnectivity = localStorage.getItem('deepsec-pilot-connectivity');
+    const savedTheme = localStorage.getItem('deepsec-pilot-theme');
+    const savedLanguage = localStorage.getItem('deepsec-pilot-language');
+    const savedAIExtended = localStorage.getItem('deepsec-pilot-ai-extended');
+
     if (savedSettings) {
       const settings = JSON.parse(savedSettings);
       setApiSettings(settings);
+      setAIExtendedSettings(prev => ({ ...prev, ...settings }));
       initializeAIService(settings);
     } else {
       setShowSettings(true);
+    }
+
+    if (savedConnectivity) {
+      setConnectivitySettings(JSON.parse(savedConnectivity));
+    }
+
+    if (savedTheme) {
+      const theme = JSON.parse(savedTheme);
+      setThemeSettings(theme);
+      // تطبيق الثيم المحفوظ
+      document.documentElement.className = theme.mode;
+    }
+
+    if (savedLanguage) {
+      const language = JSON.parse(savedLanguage);
+      setLanguageSettings(language);
+      // تطبيق اللغة المحفوظة
+      document.documentElement.dir = language.direction;
+      document.documentElement.lang = language.language;
+      setCurrentLanguage(language.language);
+    }
+
+    if (savedAIExtended) {
+      setAIExtendedSettings(JSON.parse(savedAIExtended));
     }
   }, []);
 
@@ -172,19 +254,25 @@ const Index = () => {
   };
 
   const handleSaveSettings = async () => {
+    // حفظ جميع الإعدادات
     localStorage.setItem('deepsec-pilot-settings', JSON.stringify(apiSettings));
+    localStorage.setItem('deepsec-pilot-connectivity', JSON.stringify(connectivitySettings));
+    localStorage.setItem('deepsec-pilot-theme', JSON.stringify(themeSettings));
+    localStorage.setItem('deepsec-pilot-language', JSON.stringify(languageSettings));
+    localStorage.setItem('deepsec-pilot-ai-extended', JSON.stringify(aiExtendedSettings));
+    
     await initializeAIService(apiSettings);
     setShowSettings(false);
     
     toast({
       title: "تم الحفظ",
-      description: "تم حفظ إعدادات API بنجاح",
+      description: "تم حفظ جميع الإعدادات بنجاح",
     });
   };
 
   const isSettingsValid = () => {
-    return apiSettings.deepseekApiKey || 
-           (apiSettings.azureEndpoint && apiSettings.azureApiKey && apiSettings.azureDeploymentName);
+    return aiExtendedSettings.deepseekApiKey || 
+           (aiExtendedSettings.azureEndpoint && aiExtendedSettings.azureApiKey && aiExtendedSettings.azureDeploymentName);
   };
 
   return (
@@ -256,101 +344,76 @@ const Index = () => {
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="api" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="api" className="flex items-center gap-2">
-                <Key className="w-4 h-4" />
-                API Keys
+          <Tabs defaultValue="ai" className="w-full">
+            <TabsList className="grid w-full grid-cols-8 text-xs">
+              <TabsTrigger value="ai" className="flex items-center gap-1">
+                <Bot className="w-3 h-3" />
+                ذكاء اصطناعي
               </TabsTrigger>
-              <TabsTrigger value="repositories" className="flex items-center gap-2">
-                <GitBranch className="w-4 h-4" />
+              <TabsTrigger value="connectivity" className="flex items-center gap-1">
+                <Wifi className="w-3 h-3" />
+                الاتصال
+              </TabsTrigger>
+              <TabsTrigger value="theme" className="flex items-center gap-1">
+                <Palette className="w-3 h-3" />
+                الثيم
+              </TabsTrigger>
+              <TabsTrigger value="language" className="flex items-center gap-1">
+                <Languages className="w-3 h-3" />
+                اللغة
+              </TabsTrigger>
+              <TabsTrigger value="repositories" className="flex items-center gap-1">
+                <GitBranch className="w-3 h-3" />
                 المستودعات
               </TabsTrigger>
-              <TabsTrigger value="server" className="flex items-center gap-2">
-                <Server className="w-4 h-4" />
+              <TabsTrigger value="server" className="flex items-center gap-1">
+                <Server className="w-3 h-3" />
                 السيرفر
               </TabsTrigger>
-              <TabsTrigger value="erp" className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
+              <TabsTrigger value="erp" className="flex items-center gap-1">
+                <Database className="w-3 h-3" />
                 ERP
               </TabsTrigger>
-              <TabsTrigger value="production" className="flex items-center gap-2">
-                <Rocket className="w-4 h-4" />
+              <TabsTrigger value="production" className="flex items-center gap-1">
+                <Rocket className="w-3 h-3" />
                 الإنتاج
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="api" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Badge variant="outline">DeepSeek</Badge>
-                    إعدادات DeepSeek API
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="deepseek-key">مفتاح API</Label>
-                    <Input
-                      id="deepseek-key"
-                      type="password"
-                      placeholder="sk-..."
-                      value={apiSettings.deepseekApiKey}
-                      onChange={(e) => setApiSettings(prev => ({
-                        ...prev,
-                        deepseekApiKey: e.target.value
-                      }))}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="ai" className="space-y-4">
+              <AISettings
+                aiSettings={aiExtendedSettings}
+                onAISettingsChange={setAIExtendedSettings}
+              />
+            </TabsContent>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Badge variant="outline">Azure</Badge>
-                    إعدادات Azure OpenAI
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="azure-endpoint">نقطة النهاية (Endpoint)</Label>
-                    <Input
-                      id="azure-endpoint"
-                      placeholder="https://your-resource.openai.azure.com"
-                      value={apiSettings.azureEndpoint}
-                      onChange={(e) => setApiSettings(prev => ({
-                        ...prev,
-                        azureEndpoint: e.target.value
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="azure-key">مفتاح API</Label>
-                    <Input
-                      id="azure-key"
-                      type="password"
-                      value={apiSettings.azureApiKey}
-                      onChange={(e) => setApiSettings(prev => ({
-                        ...prev,
-                        azureApiKey: e.target.value
-                      }))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="azure-deployment">اسم النشر (Deployment Name)</Label>
-                    <Input
-                      id="azure-deployment"
-                      placeholder="gpt-4"
-                      value={apiSettings.azureDeploymentName}
-                      onChange={(e) => setApiSettings(prev => ({
-                        ...prev,
-                        azureDeploymentName: e.target.value
-                      }))}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="connectivity" className="space-y-4">
+              <ConnectivitySettings
+                gitHubSettings={connectivitySettings.gitHub}
+                onGitHubSettingsChange={(settings) => setConnectivitySettings(prev => ({
+                  ...prev,
+                  gitHub: settings
+                }))}
+                driveSettings={connectivitySettings.drive}
+                onDriveSettingsChange={(settings) => setConnectivitySettings(prev => ({
+                  ...prev,
+                  drive: settings
+                }))}
+              />
+            </TabsContent>
+
+            <TabsContent value="theme" className="space-y-4">
+              <ThemeSettings
+                themeSettings={themeSettings}
+                onThemeSettingsChange={setThemeSettings}
+              />
+            </TabsContent>
+
+            <TabsContent value="language" className="space-y-4">
+              <LanguageSettings
+                languageSettings={languageSettings}
+                onLanguageSettingsChange={setLanguageSettings}
+              />
             </TabsContent>
 
             <TabsContent value="repositories" className="space-y-4">
