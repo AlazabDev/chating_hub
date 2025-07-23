@@ -82,7 +82,18 @@ export default {
 			boxShadow: {
 				'ai': 'var(--shadow-ai)',
 				'card-custom': 'var(--shadow-card)',
-				'glow': 'var(--shadow-glow)'
+				'glow': 'var(--shadow-glow)',
+				'floating': 'var(--shadow-floating)',
+				'header': 'var(--shadow-header)'
+			},
+			backdropBlur: {
+				'xl': '24px',
+			},
+			backgroundColor: {
+				'glass-bg': 'var(--glass-bg)',
+			},
+			borderColor: {
+				'glass-border': 'var(--glass-border)',
 			},
 			transitionTimingFunction: {
 				'smooth': 'var(--transition-smooth)',

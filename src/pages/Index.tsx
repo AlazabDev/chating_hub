@@ -276,7 +276,11 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="h-screen flex flex-col bg-background relative overflow-hidden" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
+      
       {/* Header */}
       <AppHeader
         connectionStatus={connectionStatus}
@@ -286,99 +290,117 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Sidebar */}
-        <ProjectSidebar
-          onFileSelect={handleFileSelect}
-          onCommandExecute={handleCommandExecute}
-        />
+        <div className="sidebar-enhanced">
+          <ProjectSidebar
+            onFileSelect={handleFileSelect}
+            onCommandExecute={handleCommandExecute}
+          />
+        </div>
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col">
-          {/* Tab Navigation */}
-          <div className="border-b border-border bg-muted/30">
-            <div className="flex">
+          {/* Tab Navigation - Enhanced */}
+          <div className="glass-card border-b border-border/50 backdrop-blur-sm">
+            <div className="flex relative">
               <Button
                 variant={activeTab === 'chat' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('chat')}
-                className="rounded-none border-r"
+                className={`tab-enhanced rounded-none border-r border-border/30 px-6 py-3 transition-all duration-300 ${
+                  activeTab === 'chat' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
+                }`}
               >
                 <Bot className="w-4 h-4 ml-2" />
-                مساعد الذكاء الاصطناعي
+                <span className="font-medium">مساعد الذكاء الاصطناعي</span>
               </Button>
               <Button
                 variant={activeTab === 'repositories' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('repositories')}
-                className="rounded-none"
+                className={`tab-enhanced rounded-none px-6 py-3 transition-all duration-300 ${
+                  activeTab === 'repositories' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
+                }`}
               >
                 <GitBranch className="w-4 h-4 ml-2" />
-                إدارة المستودعات
+                <span className="font-medium">إدارة المستودعات</span>
               </Button>
             </div>
           </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-hidden">
+          {/* Content - Enhanced */}
+          <div className="flex-1 overflow-hidden relative">
             {activeTab === 'chat' ? (
-              <div className="h-full p-4">
-                <EnhancedChatInterface
-                  onSendMessage={handleSendMessage}
-                  messages={messages}
-                  isLoading={isLoading}
-                />
+              <div className="h-full p-6 animate-fade-in">
+                <div className="h-full glass-card p-4 rounded-xl">
+                  <EnhancedChatInterface
+                    onSendMessage={handleSendMessage}
+                    messages={messages}
+                    isLoading={isLoading}
+                  />
+                </div>
               </div>
             ) : (
-              <RepositoryManager />
+              <div className="h-full p-6 animate-fade-in">
+                <div className="h-full glass-card rounded-xl overflow-hidden">
+                  <RepositoryManager />
+                </div>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Settings Dialog */}
+      {/* Settings Dialog - Enhanced */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              إعدادات التطبيق
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden glass-card animate-scale-in">
+          {/* Header with gradient */}
+          <DialogHeader className="pb-6 border-b border-border/30">
+            <DialogTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-gradient-to-br from-primary to-accent rounded-lg">
+                <Settings className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                إعدادات التطبيق
+              </span>
             </DialogTitle>
           </DialogHeader>
 
-          <Tabs defaultValue="ai" className="w-full">
-            <TabsList className="grid w-full grid-cols-8 text-xs">
-              <TabsTrigger value="ai" className="flex items-center gap-1">
-                <Bot className="w-3 h-3" />
-                ذكاء اصطناعي
-              </TabsTrigger>
-              <TabsTrigger value="connectivity" className="flex items-center gap-1">
-                <Wifi className="w-3 h-3" />
-                الاتصال
-              </TabsTrigger>
-              <TabsTrigger value="theme" className="flex items-center gap-1">
-                <Palette className="w-3 h-3" />
-                الثيم
-              </TabsTrigger>
-              <TabsTrigger value="language" className="flex items-center gap-1">
-                <Languages className="w-3 h-3" />
-                اللغة
-              </TabsTrigger>
-              <TabsTrigger value="repositories" className="flex items-center gap-1">
-                <GitBranch className="w-3 h-3" />
-                المستودعات
-              </TabsTrigger>
-              <TabsTrigger value="server" className="flex items-center gap-1">
-                <Server className="w-3 h-3" />
-                السيرفر
-              </TabsTrigger>
-              <TabsTrigger value="erp" className="flex items-center gap-1">
-                <Database className="w-3 h-3" />
-                ERP
-              </TabsTrigger>
-              <TabsTrigger value="production" className="flex items-center gap-1">
-                <Rocket className="w-3 h-3" />
-                الإنتاج
-              </TabsTrigger>
-            </TabsList>
+          <div className="overflow-y-auto max-h-[60vh] px-1">
+            <Tabs defaultValue="ai" className="w-full">
+              <TabsList className="grid w-full grid-cols-8 text-xs mb-6 glass-card p-1">
+                <TabsTrigger value="ai" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Bot className="w-3 h-3" />
+                  <span className="hidden md:inline">ذكاء اصطناعي</span>
+                </TabsTrigger>
+                <TabsTrigger value="connectivity" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Wifi className="w-3 h-3" />
+                  <span className="hidden md:inline">الاتصال</span>
+                </TabsTrigger>
+                <TabsTrigger value="theme" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Palette className="w-3 h-3" />
+                  <span className="hidden md:inline">الثيم</span>
+                </TabsTrigger>
+                <TabsTrigger value="language" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Languages className="w-3 h-3" />
+                  <span className="hidden md:inline">اللغة</span>
+                </TabsTrigger>
+                <TabsTrigger value="repositories" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <GitBranch className="w-3 h-3" />
+                  <span className="hidden md:inline">المستودعات</span>
+                </TabsTrigger>
+                <TabsTrigger value="server" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Server className="w-3 h-3" />
+                  <span className="hidden md:inline">السيرفر</span>
+                </TabsTrigger>
+                <TabsTrigger value="erp" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Database className="w-3 h-3" />
+                  <span className="hidden md:inline">ERP</span>
+                </TabsTrigger>
+                <TabsTrigger value="production" className="flex items-center gap-1 transition-all duration-200 hover-scale">
+                  <Rocket className="w-3 h-3" />
+                  <span className="hidden md:inline">الإنتاج</span>
+                </TabsTrigger>
+              </TabsList>
 
             <TabsContent value="ai" className="space-y-4">
               <AISettings
@@ -527,18 +549,20 @@ const Index = () => {
               <ProductionConfig />
             </TabsContent>
           </Tabs>
+          </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
+          <div className="flex justify-end gap-2 pt-4 border-t border-border/30">
             <Button
               variant="outline"
               onClick={() => setShowSettings(false)}
+              className="btn-ghost-enhanced hover-scale"
             >
               إلغاء
             </Button>
             <Button
               onClick={handleSaveSettings}
               disabled={!isSettingsValid()}
-              className="bg-gradient-primary hover:opacity-90"
+              className="btn-primary-enhanced"
             >
               حفظ الإعدادات
             </Button>

@@ -47,14 +47,28 @@
     --gradient-card: linear-gradient(145deg, hsl(240 10% 5.9%), hsl(240 10% 7%));
     --gradient-code: linear-gradient(145deg, hsl(240 10% 2%), hsl(240 10% 4%));
     
-    /* Advanced shadows */
+/* Advanced shadows and effects */
     --shadow-ai: 0 8px 32px -8px hsl(217 91% 60% / 0.3);
     --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.3);
     --shadow-glow: 0 0 40px hsl(217 91% 60% / 0.2);
+    --shadow-card-custom: 0 2px 8px hsl(0 0% 0% / 0.1), 0 4px 16px hsl(0 0% 0% / 0.05);
+    --shadow-header: 0 1px 3px hsl(0 0% 0% / 0.1), 0 4px 12px hsl(0 0% 0% / 0.08);
+    --shadow-floating: 0 10px 40px hsl(0 0% 0% / 0.15), 0 4px 16px hsl(0 0% 0% / 0.1);
     
-    /* Animation variables */
+    /* Animation and transition variables */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    /* Glass morphism effect */
+    --glass-bg: hsla(240, 10%, 5.9%, 0.8);
+    --glass-border: hsla(240, 6%, 20%, 0.5);
+    --glass-backdrop: blur(20px);
+    
+    /* Chat specific variables */
+    --chat-bubble-user: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
+    --chat-bubble-ai: linear-gradient(135deg, hsl(240 10% 8%), hsl(240 10% 12%));
+    --typing-dots: hsl(240 5% 65%);
 
     --radius: 0.5rem;
 
@@ -177,5 +191,150 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Modern UI components */
+  .glass-card {
+    @apply bg-glass-bg backdrop-blur-lg border border-glass-border;
+  }
+  
+  .gradient-border {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:p-[1px] before:bg-gradient-to-r before:from-primary before:to-accent before:rounded-lg;
+  }
+  
+  .gradient-border > * {
+    @apply relative bg-card rounded-lg;
+  }
+  
+  .floating-card {
+    @apply shadow-floating transition-all duration-300 hover:shadow-glow hover:-translate-y-1;
+  }
+  
+  .chat-bubble-user {
+    @apply bg-gradient-to-br from-primary to-primary-glow text-primary-foreground;
+  }
+  
+  .chat-bubble-ai {
+    @apply bg-gradient-to-br from-muted to-secondary border border-border;
+  }
+  
+  .typing-indicator {
+    @apply flex space-x-1;
+  }
+  
+  .typing-dot {
+    @apply w-2 h-2 bg-typing-dots rounded-full animate-bounce;
+  }
+  
+  .typing-dot:nth-child(2) {
+    animation-delay: 0.1s;
+  }
+  
+  .typing-dot:nth-child(3) {
+    animation-delay: 0.2s;
+  }
+  
+  /* Enhanced button styles */
+  .btn-primary-enhanced {
+    @apply bg-gradient-to-r from-primary to-primary-glow hover:shadow-ai transition-all duration-300 hover:scale-105;
+  }
+  
+  .btn-ghost-enhanced {
+    @apply hover:bg-muted/50 hover:backdrop-blur-sm transition-all duration-200;
+  }
+  
+  /* Header enhancements */
+  .header-glass {
+    @apply backdrop-blur-xl bg-background/80 border-b border-border/50;
+  }
+  
+  /* Sidebar enhancements */
+  .sidebar-enhanced {
+    @apply bg-card/95 backdrop-blur-md border-r border-border/50;
+  }
+  
+  /* Tab enhancements */
+  .tab-enhanced {
+    @apply relative overflow-hidden hover:bg-muted/50 transition-all duration-200;
+  }
+  
+  .tab-enhanced.active::after {
+    @apply content-[''] absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-accent;
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+  
+  /* Hover effects */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+  
+  .hover-glow {
+    @apply transition-shadow duration-300 hover:shadow-glow;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.6);
   }
 }
