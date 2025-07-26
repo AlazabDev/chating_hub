@@ -416,7 +416,7 @@ const Index = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background relative overflow-hidden" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="main-layout bg-background relative overflow-hidden" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
@@ -430,19 +430,17 @@ const Index = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden relative z-10">
+      <div className="content-container relative z-10">
         {/* Sidebar */}
-        <div className="sidebar-enhanced">
-          <ProjectSidebar
-            onFileSelect={handleFileSelect}
-            onCommandExecute={handleCommandExecute}
-          />
-        </div>
+        <ProjectSidebar
+          onFileSelect={handleFileSelect}
+          onCommandExecute={handleCommandExecute}
+        />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="scrollable-content">
           {/* Tab Navigation - Enhanced */}
-          <div className="glass-card border-b border-border/50 backdrop-blur-sm">
+          <div className="glass-card border-b border-border/50 backdrop-blur-sm sticky top-0 z-20">
             <div className="flex relative">
               <Button
                 variant={activeTab === 'chat' ? 'default' : 'ghost'}
