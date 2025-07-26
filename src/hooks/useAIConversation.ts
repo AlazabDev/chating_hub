@@ -47,7 +47,7 @@ export const useAIConversation = ({ onConversationCreated }: UseAIConversationPr
 
   const sendMessage = useCallback(async (
     message: string,
-    model: 'deepseek' | 'openai' = 'deepseek',
+    model: 'deepseek' | 'azure-openai' = 'deepseek',
     repositoryContext?: {
       repositoryId?: string;
       currentFiles?: string[];

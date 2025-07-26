@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChatInterface, ChatMessage } from '@/components/Chat/ChatInterface';
-import EnhancedChatInterface from '@/components/AI/EnhancedChatInterface';
+import EnhancedAIPlatform from '@/components/AI/EnhancedAIPlatform';
 import RepositoryManager from '@/components/Repository/RepositoryManager';
 import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
 import { AppHeader } from '@/components/Header/AppHeader';
@@ -480,10 +480,11 @@ const Index = () => {
             {activeTab === 'chat' ? (
               <div className="h-full p-6 animate-fade-in">
                 <div className="h-full glass-card p-4 rounded-xl">
-                  <EnhancedChatInterface
+                  <EnhancedAIPlatform
                     onSendMessage={handleSendMessage}
                     messages={messages}
                     isLoading={isLoading}
+                    modelStatus={connectionStatus}
                   />
                 </div>
               </div>

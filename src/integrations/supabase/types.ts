@@ -120,6 +120,53 @@ export type Database = {
           },
         ]
       }
+      ai_workflow_stages: {
+        Row: {
+          ai_prompt_template: string | null
+          created_at: string
+          description: string | null
+          expected_output: string | null
+          id: string
+          is_automated: boolean | null
+          repository_id: string | null
+          stage_name: string
+          stage_order: number
+          status: string | null
+        }
+        Insert: {
+          ai_prompt_template?: string | null
+          created_at?: string
+          description?: string | null
+          expected_output?: string | null
+          id?: string
+          is_automated?: boolean | null
+          repository_id?: string | null
+          stage_name: string
+          stage_order: number
+          status?: string | null
+        }
+        Update: {
+          ai_prompt_template?: string | null
+          created_at?: string
+          description?: string | null
+          expected_output?: string | null
+          id?: string
+          is_automated?: boolean | null
+          repository_id?: string | null
+          stage_name?: string
+          stage_order?: number
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_workflow_stages_repository_id_fkey"
+            columns: ["repository_id"]
+            isOneToOne: false
+            referencedRelation: "repositories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assigned_at: string | null
@@ -1031,6 +1078,8 @@ export type Database = {
       }
       repositories: {
         Row: {
+          ai_features_enabled: boolean | null
+          auto_suggestions: boolean | null
           branch: string | null
           created_at: string
           description: string | null
@@ -1044,8 +1093,11 @@ export type Database = {
           settings: Json | null
           status: string | null
           updated_at: string
+          workflow_automation: boolean | null
         }
         Insert: {
+          ai_features_enabled?: boolean | null
+          auto_suggestions?: boolean | null
           branch?: string | null
           created_at?: string
           description?: string | null
@@ -1059,8 +1111,11 @@ export type Database = {
           settings?: Json | null
           status?: string | null
           updated_at?: string
+          workflow_automation?: boolean | null
         }
         Update: {
+          ai_features_enabled?: boolean | null
+          auto_suggestions?: boolean | null
           branch?: string | null
           created_at?: string
           description?: string | null
@@ -1074,6 +1129,7 @@ export type Database = {
           settings?: Json | null
           status?: string | null
           updated_at?: string
+          workflow_automation?: boolean | null
         }
         Relationships: []
       }
