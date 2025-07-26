@@ -104,7 +104,7 @@
 
   /* Enhanced sidebar */
   .sidebar-enhanced {
-    @apply w-80 bg-sidebar-background/90 backdrop-blur-lg border-r border-sidebar-border/50 shadow-xl;
+    @apply w-80 bg-sidebar/90 backdrop-blur-lg border-r border-sidebar-border/50 shadow-xl;
   }
 
   /* Enhanced tabs */
