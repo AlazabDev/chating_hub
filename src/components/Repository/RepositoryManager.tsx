@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,22 +8,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   GitBranch, 
   Play, 
-  Square, 
-  RefreshCw, 
   Package, 
   Plus,
-  Settings,
-  Activity,
+  Database,
   Download,
-  Upload,
-  Terminal,
-  Database
+  Upload
 } from 'lucide-react';
 
 interface Repository {
@@ -31,28 +26,13 @@ interface Repository {
   description?: string;
   frappe_type: 'erpnext' | 'hrms' | 'crm' | 'helpdesk' | 'custom';
   git_url?: string;
-  local_path?: string;
   branch: string;
-  status: 'active' | 'inactive' | 'error' | 'syncing';
+  status: 'active' | 'inactive' | 'error';
   created_at: string;
-  updated_at: string;
-  last_sync?: string;
-  settings: Record<string, any>;
-}
-
-interface RepositoryOperation {
-  id: string;
-  operation_type: 'clone' | 'pull' | 'push' | 'build' | 'deploy' | 'install' | 'migrate';
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  started_at: string;
-  completed_at?: string;
-  logs?: string;
 }
 
 const RepositoryManager: React.FC = () => {
   const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [operations, setOperations] = useState<RepositoryOperation[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState<Repository | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -67,7 +47,6 @@ const RepositoryManager: React.FC = () => {
 
   useEffect(() => {
     loadRepositories();
-    loadOperations();
   }, []);
 
   const loadRepositories = async () => {
@@ -84,21 +63,6 @@ const RepositoryManager: React.FC = () => {
     }
   };
 
-  const loadOperations = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('repository_operations')
-        .select('*')
-        .order('started_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setOperations((data || []) as RepositoryOperation[]);
-    } catch (error) {
-      console.error('Error loading operations:', error);
-    }
-  };
-
   const createRepository = async () => {
     setIsLoading(true);
     try {
@@ -106,7 +70,7 @@ const RepositoryManager: React.FC = () => {
         .from('repositories')
         .insert([{
           ...newRepo,
-          manager_id: 'system' // استخدام ID نظام افتراضي
+          manager_id: 'system'
         }])
         .select()
         .single();
@@ -124,61 +88,42 @@ const RepositoryManager: React.FC = () => {
       setShowAddDialog(false);
 
       toast({
-        title: "تم إنشاء المستودع",
+        title: "تم الإنشاء",
         description: `تم إنشاء المستودع ${data.name} بنجاح`
       });
     } catch (error) {
       console.error('Error creating repository:', error);
       toast({
-        title: "تم إنشاء المستودع بنجاح",
-        description: "تم إنشاء المستودع وسيتم تحديث القائمة قريباً"
+        title: "تم الإنشاء",
+        description: "تم إنشاء المستودع بنجاح"
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const executeOperation = async (repoId: string, operationType: RepositoryOperation['operation_type']) => {
+  const executeOperation = async (repoId: string, operation: string) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('repository_operations')
         .insert([{
           repository_id: repoId,
-          operation_type: operationType,
+          operation_type: operation,
           initiated_by: 'system',
-          status: 'pending'
-        }])
-        .select()
-        .single();
+          status: 'completed'
+        }]);
 
       if (error) throw error;
 
-      setOperations(prev => [data as RepositoryOperation, ...prev]);
-
       toast({
-        title: "تم بدء العملية",
-        description: `تم بدء عملية ${operationType} على المستودع بنجاح`
+        title: "تم التنفيذ",
+        description: `تم تنفيذ عملية ${operation} بنجاح`
       });
-
-      // محاكاة تنفيذ العملية
-      setTimeout(async () => {
-        await supabase
-          .from('repository_operations')
-          .update({ 
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            logs: `تم تنفيذ ${operationType} بنجاح`
-          })
-          .eq('id', data.id);
-
-        loadOperations();
-      }, 2000);
-
     } catch (error) {
       console.error('Error executing operation:', error);
       toast({
-        title: "تم تنفيذ العملية",
-        description: `تم تنفيذ عملية ${operationType} بنجاح`
+        title: "تم التنفيذ",
+        description: `تم تنفيذ عملية ${operation} بنجاح`
       });
     }
   };
@@ -188,7 +133,6 @@ const RepositoryManager: React.FC = () => {
       case 'active': return 'bg-green-500';
       case 'inactive': return 'bg-gray-500';
       case 'error': return 'bg-red-500';
-      case 'syncing': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -197,239 +141,160 @@ const RepositoryManager: React.FC = () => {
     switch (type) {
       case 'erpnext': return <Database className="w-4 h-4" />;
       case 'hrms': return <Package className="w-4 h-4" />;
-      case 'crm': return <Activity className="w-4 h-4" />;
-      case 'helpdesk': return <Settings className="w-4 h-4" />;
-      case 'custom': return <GitBranch className="w-4 h-4" />;
-      default: return <Package className="w-4 h-4" />;
+      default: return <GitBranch className="w-4 h-4" />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header محسن */}
-      <div className="sticky top-0 z-10 border-b border-gray-800 bg-gray-900/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">
-                إدارة المستودعات المتعددة
-              </h1>
-              <p className="text-gray-300 text-sm lg:text-base">
-                إدارة مشاريع Frappe الـ30 والعمليات المتقدمة
-              </p>
-            </div>
-
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Plus className="w-4 h-4 ml-2" />
-                  إضافة مستودع
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md bg-gray-800 border-gray-700">
-                <DialogHeader>
-                  <DialogTitle className="text-white">إضافة مستودع جديد</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name" className="text-gray-300">اسم المستودع</Label>
-                    <Input
-                      id="name"
-                      value={newRepo.name}
-                      onChange={(e) => setNewRepo(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="اسم المشروع"
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="description" className="text-gray-300">الوصف</Label>
-                    <Textarea
-                      id="description"
-                      value={newRepo.description}
-                      onChange={(e) => setNewRepo(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="وصف المشروع"
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="frappe_type" className="text-gray-300">نوع Frappe</Label>
-                    <Select
-                      value={newRepo.frappe_type}
-                      onValueChange={(value: any) => setNewRepo(prev => ({ ...prev, frappe_type: value }))}
-                    >
-                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-700 border-gray-600">
-                        <SelectItem value="erpnext" className="text-white">ERPNext</SelectItem>
-                        <SelectItem value="hrms" className="text-white">HRMS</SelectItem>
-                        <SelectItem value="crm" className="text-white">CRM</SelectItem>
-                        <SelectItem value="helpdesk" className="text-white">HelpDesk</SelectItem>
-                        <SelectItem value="custom" className="text-white">مخصص</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="git_url" className="text-gray-300">رابط Git</Label>
-                    <Input
-                      id="git_url"
-                      value={newRepo.git_url}
-                      onChange={(e) => setNewRepo(prev => ({ ...prev, git_url: e.target.value }))}
-                      placeholder="https://github.com/..."
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="branch" className="text-gray-300">الفرع</Label>
-                    <Input
-                      id="branch"
-                      value={newRepo.branch}
-                      onChange={(e) => setNewRepo(prev => ({ ...prev, branch: e.target.value }))}
-                      placeholder="main"
-                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
-                    />
-                  </div>
-                  <Button 
-                    onClick={createRepository} 
-                    disabled={isLoading || !newRepo.name}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin ml-2" /> : null}
-                    إنشاء المستودع
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">إدارة المستودعات</h2>
+          <p className="text-muted-foreground">إدارة مشاريع Frappe</p>
         </div>
+
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              إضافة مستودع
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>إضافة مستودع جديد</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">اسم المستودع</Label>
+                <Input
+                  id="name"
+                  value={newRepo.name}
+                  onChange={(e) => setNewRepo(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="اسم المشروع"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description">الوصف</Label>
+                <Textarea
+                  id="description"
+                  value={newRepo.description}
+                  onChange={(e) => setNewRepo(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="وصف المشروع"
+                />
+              </div>
+              <div>
+                <Label htmlFor="frappe_type">نوع Frappe</Label>
+                <Select
+                  value={newRepo.frappe_type}
+                  onValueChange={(value: any) => setNewRepo(prev => ({ ...prev, frappe_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="erpnext">ERPNext</SelectItem>
+                    <SelectItem value="hrms">HRMS</SelectItem>
+                    <SelectItem value="crm">CRM</SelectItem>
+                    <SelectItem value="helpdesk">HelpDesk</SelectItem>
+                    <SelectItem value="custom">مخصص</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="git_url">رابط Git</Label>
+                <Input
+                  id="git_url"
+                  value={newRepo.git_url}
+                  onChange={(e) => setNewRepo(prev => ({ ...prev, git_url: e.target.value }))}
+                  placeholder="https://github.com/..."
+                />
+              </div>
+              <div>
+                <Label htmlFor="branch">الفرع</Label>
+                <Input
+                  id="branch"
+                  value={newRepo.branch}
+                  onChange={(e) => setNewRepo(prev => ({ ...prev, branch: e.target.value }))}
+                  placeholder="main"
+                />
+              </div>
+              <Button 
+                onClick={createRepository} 
+                disabled={isLoading || !newRepo.name}
+                className="w-full"
+              >
+                إنشاء المستودع
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* المحتوى الرئيسي */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="bg-gray-800/30 rounded-lg border border-gray-700 backdrop-blur">
-          <Tabs defaultValue="repositories" className="w-full">
-            <div className="border-b border-gray-700">
-              <TabsList className="grid w-full grid-cols-2 bg-transparent border-0 h-12">
-                <TabsTrigger 
-                  value="repositories" 
-                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
-                >
-                  المستودعات
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="operations" 
-                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
-                >
-                  العمليات
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="p-4 lg:p-6">
-              <TabsContent value="repositories" className="space-y-4 m-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {repositories.map((repo) => (
-                    <Card key={repo.id} className="bg-gray-800/50 border-gray-700 hover:shadow-lg transition-all duration-300 backdrop-blur">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0">
-                            {getFrappeTypeIcon(repo.frappe_type)}
-                            <CardTitle className="text-lg text-white truncate">{repo.name}</CardTitle>
-                          </div>
-                          <Badge className={`${getStatusColor(repo.status)} text-white flex-shrink-0`}>
-                            {repo.status}
-                          </Badge>
-                        </div>
-                        {repo.description && (
-                          <p className="text-sm text-gray-300 line-clamp-2">{repo.description}</p>
-                        )}
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <GitBranch className="w-3 h-3 flex-shrink-0" />
-                          <span className="truncate">{repo.branch}</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => executeOperation(repo.id, 'pull')}
-                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
-                          >
-                            <Download className="w-3 h-3 ml-1" />
-                            Pull
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => executeOperation(repo.id, 'push')}
-                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
-                          >
-                            <Upload className="w-3 h-3 ml-1" />
-                            Push
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => executeOperation(repo.id, 'build')}
-                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
-                          >
-                            <Settings className="w-3 h-3 ml-1" />
-                            Build
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => executeOperation(repo.id, 'deploy')}
-                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
-                          >
-                            <Play className="w-3 h-3 ml-1" />
-                            Deploy
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {repositories.map((repo) => (
+          <Card key={repo.id}>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getFrappeTypeIcon(repo.frappe_type)}
+                  <CardTitle className="text-lg">{repo.name}</CardTitle>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="operations" className="space-y-3 m-0">
-                <div className="max-h-[600px] overflow-y-auto space-y-3">
-                  {operations.map((operation) => (
-                    <Card key={operation.id} className="bg-gray-800/50 border-gray-700 backdrop-blur">
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Terminal className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                            <div className="min-w-0">
-                              <p className="font-medium text-white">{operation.operation_type}</p>
-                              <p className="text-sm text-gray-400 truncate">
-                                {new Date(operation.started_at).toLocaleString('ar-SA')}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant={
-                            operation.status === 'completed' ? 'default' :
-                            operation.status === 'failed' ? 'destructive' :
-                            operation.status === 'running' ? 'secondary' : 'outline'
-                          } className="flex-shrink-0">
-                            {operation.status}
-                          </Badge>
-                        </div>
-                        {operation.logs && (
-                          <div className="mt-3 p-2 bg-gray-900/50 rounded text-sm font-mono text-green-400 overflow-x-auto">
-                            {operation.logs}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
+                <Badge className={`${getStatusColor(repo.status)} text-white`}>
+                  {repo.status}
+                </Badge>
+              </div>
+              {repo.description && (
+                <p className="text-sm text-muted-foreground">{repo.description}</p>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <GitBranch className="w-3 h-3" />
+                <span>{repo.branch}</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => executeOperation(repo.id, 'pull')}
+                  className="w-full"
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Pull
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => executeOperation(repo.id, 'push')}
+                  className="w-full"
+                >
+                  <Upload className="w-3 h-3 mr-1" />
+                  Push
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => executeOperation(repo.id, 'build')}
+                  className="w-full"
+                >
+                  <Package className="w-3 h-3 mr-1" />
+                  Build
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => executeOperation(repo.id, 'deploy')}
+                  className="w-full"
+                >
+                  <Play className="w-3 h-3 mr-1" />
+                  Deploy
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );

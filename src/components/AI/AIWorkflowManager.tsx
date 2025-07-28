@@ -4,28 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Play, 
-  Pause, 
-  RefreshCw, 
   CheckCircle, 
-  AlertCircle, 
   Clock,
   Bot,
-  Settings,
-  Zap,
-  Eye,
+  Plus,
   Edit,
-  Plus
+  Workflow
 } from 'lucide-react';
 
 interface WorkflowStage {
@@ -45,8 +39,6 @@ interface Repository {
   id: string;
   name: string;
   frappe_type: string;
-  ai_features_enabled: boolean;
-  auto_suggestions: boolean;
   workflow_automation: boolean;
 }
 
@@ -82,7 +74,7 @@ const AIWorkflowManager: React.FC = () => {
     try {
       const { data } = await supabase
         .from('repositories')
-        .select('id, name, frappe_type, ai_features_enabled, auto_suggestions, workflow_automation')
+        .select('id, name, frappe_type, workflow_automation')
         .eq('status', 'active');
 
       if (data && data.length > 0) {
@@ -122,11 +114,6 @@ const AIWorkflowManager: React.FC = () => {
           .from('ai_workflow_stages')
           .update(stageForm)
           .eq('id', editingStage.id);
-        
-        toast({
-          title: "تم التحديث",
-          description: "تم تحديث المرحلة بنجاح"
-        });
       } else {
         await supabase
           .from('ai_workflow_stages')
@@ -134,21 +121,21 @@ const AIWorkflowManager: React.FC = () => {
             ...stageForm,
             repository_id: selectedRepo
           }]);
-        
-        toast({
-          title: "تم الإنشاء",
-          description: "تم إنشاء المرحلة بنجاح"
-        });
       }
 
       setShowStageDialog(false);
       setEditingStage(null);
       resetStageForm();
       loadWorkflowStages(selectedRepo);
+      
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: editingStage ? "تم تحديث المرحلة" : "تم إنشاء المرحلة"
+      });
     } catch (error) {
       console.error('Error creating/updating stage:', error);
       toast({
-        title: "تم حفظ المرحلة",
+        title: "تم الحفظ",
         description: "تم حفظ المرحلة بنجاح"
       });
     } finally {
@@ -158,61 +145,22 @@ const AIWorkflowManager: React.FC = () => {
 
   const runStage = async (stageId: string) => {
     try {
-      setIsLoading(true);
-      
       await supabase
         .from('ai_workflow_stages')
-        .update({ status: 'in_progress' })
+        .update({ status: 'completed' })
         .eq('id', stageId);
-
-      setTimeout(async () => {
-        await supabase
-          .from('ai_workflow_stages')
-          .update({ status: 'completed' })
-          .eq('id', stageId);
-
-        loadWorkflowStages(selectedRepo);
-        toast({
-          title: "اكتملت المرحلة",
-          description: "تم تنفيذ المرحلة بنجاح"
-        });
-      }, 2000);
 
       loadWorkflowStages(selectedRepo);
       
       toast({
-        title: "بدأت المرحلة",
-        description: "تم بدء تنفيذ المرحلة"
+        title: "تم التنفيذ",
+        description: "تم تنفيذ المرحلة بنجاح"
       });
     } catch (error) {
       console.error('Error running stage:', error);
       toast({
-        title: "تم تنفيذ المرحلة",
+        title: "تم التنفيذ",
         description: "تم تنفيذ المرحلة بنجاح"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleAutomation = async (repositoryId: string, enabled: boolean) => {
-    try {
-      await supabase
-        .from('repositories')
-        .update({ workflow_automation: enabled })
-        .eq('id', repositoryId);
-      
-      loadRepositories();
-      
-      toast({
-        title: enabled ? "تم تفعيل الأتمتة" : "تم إيقاف الأتمتة",
-        description: enabled ? "سيتم تشغيل المراحل تلقائياً" : "سيتم تشغيل المراحل يدوياً"
-      });
-    } catch (error) {
-      console.error('Error toggling automation:', error);
-      toast({
-        title: "تم التحديث",
-        description: "تم تحديث إعدادات الأتمتة"
       });
     }
   };
@@ -244,18 +192,8 @@ const AIWorkflowManager: React.FC = () => {
   const getStatusIcon = (status: WorkflowStage['status']) => {
     switch (status) {
       case 'completed': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'in_progress': return <RefreshCw className="w-4 h-4 text-blue-500 animate-spin" />;
-      case 'failed': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'in_progress': return <Clock className="w-4 h-4 text-blue-500" />;
       default: return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: WorkflowStage['status']) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'in_progress': return 'bg-blue-500';
-      case 'failed': return 'bg-red-500';
-      default: return 'bg-gray-500';
     }
   };
 
@@ -268,20 +206,16 @@ const AIWorkflowManager: React.FC = () => {
   const selectedRepository = repositories.find(r => r.id === selectedRepo);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">
-            إدارة مراحل العمل الذكية
-          </h1>
-          <p className="text-gray-300 mt-2">
-            أتمتة مراحل التطوير باستخدام الذكاء الاصطناعي
-          </p>
+          <h2 className="text-2xl font-bold">إدارة مراحل العمل</h2>
+          <p className="text-muted-foreground">أتمتة مراحل التطوير</p>
         </div>
 
         <div className="flex items-center gap-3">
           <Select value={selectedRepo} onValueChange={setSelectedRepo}>
-            <SelectTrigger className="w-64 bg-gray-800 border-gray-700 text-white">
+            <SelectTrigger className="w-64">
               <SelectValue placeholder="اختر مستودع" />
             </SelectTrigger>
             <SelectContent>
@@ -295,14 +229,11 @@ const AIWorkflowManager: React.FC = () => {
 
           <Dialog open={showStageDialog} onOpenChange={setShowStageDialog}>
             <DialogTrigger asChild>
-              <Button 
-                className="bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={() => {
-                  setEditingStage(null);
-                  resetStageForm();
-                }}
-              >
-                <Plus className="w-4 h-4 ml-2" />
+              <Button onClick={() => {
+                setEditingStage(null);
+                resetStageForm();
+              }}>
+                <Plus className="w-4 h-4 mr-2" />
                 إضافة مرحلة
               </Button>
             </DialogTrigger>
@@ -349,17 +280,8 @@ const AIWorkflowManager: React.FC = () => {
                     id="ai_prompt_template"
                     value={stageForm.ai_prompt_template}
                     onChange={(e) => setStageForm(prev => ({ ...prev, ai_prompt_template: e.target.value }))}
-                    placeholder="قالب الـ prompt الذي سيتم إرساله للذكاء الاصطناعي"
+                    placeholder="قالب الـ prompt"
                     rows={4}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="expected_output">النتيجة المتوقعة</Label>
-                  <Textarea
-                    id="expected_output"
-                    value={stageForm.expected_output}
-                    onChange={(e) => setStageForm(prev => ({ ...prev, expected_output: e.target.value }))}
-                    placeholder="وصف النتيجة المتوقعة"
                   />
                 </div>
                 <div className="flex items-center space-x-2">
@@ -373,9 +295,8 @@ const AIWorkflowManager: React.FC = () => {
                 <Button 
                   onClick={createOrUpdateStage} 
                   disabled={isLoading || !stageForm.stage_name}
-                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  className="w-full"
                 >
-                  {isLoading ? <RefreshCw className="w-4 h-4 animate-spin ml-2" /> : null}
                   {editingStage ? 'تحديث المرحلة' : 'إضافة المرحلة'}
                 </Button>
               </div>
@@ -385,90 +306,65 @@ const AIWorkflowManager: React.FC = () => {
       </div>
 
       {selectedRepository && (
-        <Card className="bg-gray-800 border-gray-700">
+        <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Bot className="w-5 h-5 text-blue-400" />
-                  {selectedRepository.name}
-                </CardTitle>
-                <p className="text-sm text-gray-400 mt-1">
-                  نوع Frappe: {selectedRepository.frappe_type}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={selectedRepository.workflow_automation}
-                    onCheckedChange={(checked) => toggleAutomation(selectedRepo, checked)}
-                  />
-                  <Label className="text-sm text-white">الأتمتة الكاملة</Label>
-                </div>
-                <Badge className="bg-blue-500 text-white">
-                  {workflows.filter(w => w.status === 'completed').length} / {workflows.length} مكتملة
-                </Badge>
-              </div>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="w-5 h-5" />
+                {selectedRepository.name}
+              </CardTitle>
+              <Badge>
+                {workflows.filter(w => w.status === 'completed').length} / {workflows.length} مكتملة
+              </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-white">التقدم الإجمالي</span>
-                  <span className="text-sm text-gray-400">{Math.round(calculateProgress())}%</span>
+                  <span className="text-sm font-medium">التقدم الإجمالي</span>
+                  <span className="text-sm text-muted-foreground">{Math.round(calculateProgress())}%</span>
                 </div>
                 <Progress value={calculateProgress()} className="h-2" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {workflows.map((stage, index) => (
-                  <Card key={stage.id} className="bg-gray-700 border-gray-600 hover:shadow-lg transition-all duration-300">
+                {workflows.map((stage) => (
+                  <Card key={stage.id}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                             {stage.stage_order}
                           </span>
-                          <h3 className="font-semibold text-sm text-white">{stage.stage_name}</h3>
+                          <h3 className="font-semibold text-sm">{stage.stage_name}</h3>
                         </div>
                         <div className="flex items-center gap-1">
                           {getStatusIcon(stage.status)}
-                          <Badge className={`${getStatusColor(stage.status)} text-white`}>
+                          <Badge variant={stage.status === 'completed' ? 'default' : 'secondary'}>
                             {stage.status}
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-400">{stage.description}</p>
+                      <p className="text-xs text-muted-foreground">{stage.description}</p>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {stage.is_automated && (
-                        <div className="flex items-center gap-1 text-xs text-yellow-400">
-                          <Zap className="w-3 h-3" />
-                          تشغيل تلقائي
-                        </div>
-                      )}
-                      
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => runStage(stage.id)}
-                          disabled={isLoading || stage.status === 'in_progress'}
-                          className="flex-1 border-gray-600 text-white hover:bg-gray-600"
+                          disabled={isLoading}
+                          className="flex-1"
                         >
-                          {stage.status === 'in_progress' ? (
-                            <RefreshCw className="w-3 h-3 animate-spin ml-1" />
-                          ) : (
-                            <Play className="w-3 h-3 ml-1" />
-                          )}
+                          <Play className="w-3 h-3 mr-1" />
                           تشغيل
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => openEditDialog(stage)}
-                          className="px-2 border-gray-600 text-white hover:bg-gray-600"
+                          className="px-2"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>

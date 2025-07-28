@@ -1,758 +1,188 @@
-import React, { useState, useEffect } from 'react';
-import { ChatInterface, ChatMessage } from '@/components/Chat/ChatInterface';
-import EnhancedAIPlatform from '@/components/AI/EnhancedAIPlatform';
-import RepositoryManager from '@/components/Repository/RepositoryManager';
-import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
-import { AppHeader } from '@/components/Header/AppHeader';
-import { AIService, AIServiceConfig } from '@/services/aiService';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+import React from 'react';
+import { useAIConversation } from '@/hooks/useAIConversation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProductionConfig } from '@/components/Production/ProductionConfig';
-import { DeploymentStatus } from '@/components/Production/DeploymentStatus';
-import { ConnectivitySettings } from '@/components/Settings/ConnectivitySettings';
-import { ThemeSettings } from '@/components/Settings/ThemeSettings';
-import { LanguageSettings } from '@/components/Settings/LanguageSettings';
-import { AISettings } from '@/components/Settings/AISettings';
-import { Settings, Key, Server, Database, Rocket, GitBranch, Bot, Palette, Languages, Wifi, HardDrive, Activity, BarChart3 } from 'lucide-react';
-import BackupSettings from '@/components/Settings/BackupSettings';
-import PerformanceMonitor from '@/components/Analytics/PerformanceMonitor';
-import { useKeyboardShortcuts, createDefaultShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useAutoSave } from '@/hooks/useAutoSave';
-import ShortcutsHelper from '@/components/Layout/ShortcutsHelper';
+import { Bot, User, MessageSquare, Database, Send, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 const Index = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState<'ar' | 'en'>('ar');
-  const [aiService, setAiService] = useState<AIService | null>(null);
-  const [activeTab, setActiveTab] = useState<'chat' | 'repositories' | 'performance'>('chat');
-  const [connectionStatus, setConnectionStatus] = useState({
-    deepseek: false,
-    azureOpenAI: false,
-    server: false
-  });
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [deploymentStatus, setDeploymentStatus] = useState({
-    isReady: false,
-    errors: [] as string[],
-    warnings: [] as string[],
-    lastChecked: new Date()
-  });
+  const [message, setMessage] = useState('');
+  const [selectedModel, setSelectedModel] = useState<'deepseek' | 'azure-openai'>('deepseek');
+  
+  const { messages, loading, sendMessage, startNewConversation } = useAIConversation();
 
-  // إعدادات شاملة للتطبيق
-  const [apiSettings, setApiSettings] = useState({
-    deepseekApiKey: '',
-    azureEndpoint: '',
-    azureApiKey: '',
-    azureDeploymentName: ''
-  });
-
-  const [connectivitySettings, setConnectivitySettings] = useState({
-    gitHub: {
-      token: '',
-      username: '',
-      autoSync: false
-    },
-    drive: {
-      googleDrive: {
-        clientId: '',
-        clientSecret: '',
-        enabled: false
-      },
-      oneDrive: {
-        clientId: '',
-        clientSecret: '',
-        enabled: false
-      }
-    }
-  });
-
-  const [themeSettings, setThemeSettings] = useState({
-    mode: 'dark' as 'light' | 'dark' | 'system',
-    colorScheme: 'blue' as 'blue' | 'green' | 'purple' | 'orange' | 'pink',
-    fontSize: 'medium' as 'small' | 'medium' | 'large',
-    borderRadius: 'medium' as 'none' | 'small' | 'medium' | 'large'
-  });
-
-  const [languageSettings, setLanguageSettings] = useState({
-    language: 'ar' as 'ar' | 'en' | 'fr' | 'es',
-    direction: 'rtl' as 'rtl' | 'ltr',
-    dateFormat: 'dd/mm/yyyy' as 'dd/mm/yyyy' | 'mm/dd/yyyy' | 'yyyy-mm-dd',
-    timeFormat: '24h' as '12h' | '24h',
-    autoDetect: false
-  });
-
-  const [aiExtendedSettings, setAIExtendedSettings] = useState({
-    deepseekApiKey: '',
-    azureEndpoint: '',
-    azureApiKey: '',
-    azureDeploymentName: '',
-    defaultModel: 'deepseek' as 'deepseek' | 'azure-openai',
-    temperature: 1,
-    maxTokens: 2000,
-    autoSave: true,
-    enableStreaming: true,
-    enableCodeExecution: false
-  });
-
-  const { toast } = useToast();
-
-  // Auto-save settings
-  useAutoSave({
-    data: {
-      api: apiSettings,
-      connectivity: connectivitySettings,
-      theme: themeSettings,
-      language: languageSettings,
-      aiExtended: aiExtendedSettings
-    },
-    onSave: async (data) => {
-      localStorage.setItem('deepsec-pilot-settings', JSON.stringify(data.api));
-      localStorage.setItem('deepsec-pilot-connectivity', JSON.stringify(data.connectivity));
-      localStorage.setItem('deepsec-pilot-theme', JSON.stringify(data.theme));
-      localStorage.setItem('deepsec-pilot-language', JSON.stringify(data.language));
-      localStorage.setItem('deepsec-pilot-ai-extended', JSON.stringify(data.aiExtended));
-    },
-    delay: 3000,
-    key: 'app-settings'
-  });
-
-  // Keyboard shortcuts
-  const shortcuts = createDefaultShortcuts({
-    openSearch: () => setShowSearch(true),
-    openNotifications: () => setShowNotifications(true),
-    openSettings: () => setShowSettings(true),
-    toggleTheme: () => {
-      const newTheme = themeSettings.mode === 'dark' ? 'light' : 'dark';
-      setThemeSettings(prev => ({ ...prev, mode: newTheme }));
-    },
-    switchToChat: () => setActiveTab('chat'),
-    switchToRepositories: () => setActiveTab('repositories'),
-    switchToPerformance: () => setActiveTab('performance'),
-    newConversation: () => {
-      setMessages([]);
-      toast({
-        title: "محادثة جديدة",
-        description: "تم بدء محادثة جديدة"
-      });
-    }
-  });
-
-  useKeyboardShortcuts({ 
-    shortcuts: [
-      ...shortcuts,
-      {
-        key: '?',
-        action: () => setShowShortcuts(true),
-        description: 'عرض اختصارات لوحة المفاتيح',
-        category: 'general'
-      }
-    ]
-  });
-
-  useEffect(() => {
-    // تحميل الإعدادات المحفوظة
-    const savedSettings = localStorage.getItem('deepsec-pilot-settings');
-    const savedConnectivity = localStorage.getItem('deepsec-pilot-connectivity');
-    const savedTheme = localStorage.getItem('deepsec-pilot-theme');
-    const savedLanguage = localStorage.getItem('deepsec-pilot-language');
-    const savedAIExtended = localStorage.getItem('deepsec-pilot-ai-extended');
-
-    if (savedSettings) {
-      const settings = JSON.parse(savedSettings);
-      setApiSettings(settings);
-      setAIExtendedSettings(prev => ({ ...prev, ...settings }));
-      initializeAIService(settings);
-    } else {
-      setShowSettings(true);
-    }
-
-    if (savedConnectivity) {
-      setConnectivitySettings(JSON.parse(savedConnectivity));
-    }
-
-    if (savedTheme) {
-      const theme = JSON.parse(savedTheme);
-      setThemeSettings(theme);
-      // تطبيق الثيم المحفوظ
-      document.documentElement.className = theme.mode;
-    }
-
-    if (savedLanguage) {
-      const language = JSON.parse(savedLanguage);
-      setLanguageSettings(language);
-      // تطبيق اللغة المحفوظة
-      document.documentElement.dir = language.direction;
-      document.documentElement.lang = language.language;
-      setCurrentLanguage(language.language);
-    }
-
-    if (savedAIExtended) {
-      setAIExtendedSettings(JSON.parse(savedAIExtended));
-    }
-  }, []);
-
-  const initializeAIService = async (settings: typeof apiSettings) => {
-    try {
-      const config: AIServiceConfig = {};
-      
-      if (settings.deepseekApiKey) {
-        config.deepseekApiKey = settings.deepseekApiKey;
-      }
-      
-      if (settings.azureEndpoint && settings.azureApiKey && settings.azureDeploymentName) {
-        config.azureOpenAIConfig = {
-          endpoint: settings.azureEndpoint,
-          apiKey: settings.azureApiKey,
-          deploymentName: settings.azureDeploymentName
-        };
-      }
-
-      const service = new AIService(config);
-      setAiService(service);
-
-      // اختبار الاتصالات مع معالجة الأخطاء
-      const connections = { ...connectionStatus };
-      
-      if (config.deepseekApiKey) {
-        try {
-          connections.deepseek = await service.testConnection('deepseek');
-          if (connections.deepseek) {
-            toast({
-              title: "DeepSeek متصل",
-              description: "تم الاتصال بنجاح مع DeepSeek API",
-            });
-          }
-        } catch (error) {
-          connections.deepseek = false;
-          console.warn('DeepSeek connection failed:', error);
-        }
-      }
-      
-      if (config.azureOpenAIConfig) {
-        try {
-          connections.azureOpenAI = await service.testConnection('azure-openai');
-          if (connections.azureOpenAI) {
-            toast({
-              title: "Azure OpenAI متصل",
-              description: "تم الاتصال بنجاح مع Azure OpenAI",
-            });
-          }
-        } catch (error) {
-          connections.azureOpenAI = false;
-          console.warn('Azure OpenAI connection failed:', error);
-        }
-      }
-      
-      connections.server = true;
-      setConnectionStatus(connections);
-
-      // تحديد النموذج الافتراضي بناءً على ما هو متاح
-      if (connections.deepseek && !connections.azureOpenAI) {
-        setAIExtendedSettings(prev => ({ ...prev, defaultModel: 'deepseek' }));
-      } else if (connections.azureOpenAI && !connections.deepseek) {
-        setAIExtendedSettings(prev => ({ ...prev, defaultModel: 'azure-openai' }));
-      }
-
-      // تحديث حالة النشر
-      checkDeploymentReadiness(connections);
-
-    } catch (error) {
-      console.error('Failed to initialize AI service:', error);
-      toast({
-        title: "خطأ في التهيئة",
-        description: "فشل في تهيئة خدمة الذكاء الاصطناعي",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const checkDeploymentReadiness = (connections: typeof connectionStatus) => {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // فحص الاتصالات الأساسية
-    if (!connections.deepseek && !connections.azureOpenAI) {
-      errors.push('لا يوجد اتصال بأي خدمة ذكاء اصطناعي');
-    }
-
-    // فحص الإعدادات
-    if (!isSettingsValid()) {
-      errors.push('إعدادات API غير مكتملة');
-    }
-
-    // تحذيرات للتحسين
-    if (!connections.deepseek && connections.azureOpenAI) {
-      warnings.push('Azure OpenAI متصل لكن يواجه مشاكل في المصادقة');
-    }
-
-    if (!connectivitySettings.gitHub.token) {
-      warnings.push('رمز GitHub غير مكوّن');
-    }
-
-    setDeploymentStatus({
-      isReady: errors.length === 0,
-      errors,
-      warnings,
-      lastChecked: new Date()
-    });
-  };
-
-  const handleSendMessage = async (content: string, model: 'deepseek' | 'azure-openai', context?: any) => {
-    if (!aiService) {
-      toast({
-        title: "خطأ في الإعداد",
-        description: "يرجى تكوين إعدادات API أولاً",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString() + '_user',
-      content,
-      type: 'user',
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-
-    try {
-      const response = await aiService.sendMessage(content, model, context);
-      
-      const aiMessage: ChatMessage = {
-        id: Date.now().toString() + '_ai',
-        content: response.content,
-        type: 'ai',
-        model: response.model,
-        timestamp: new Date(),
-        isCode: response.content.includes('```'),
-        action: response.action?.type
-      };
-
-      setMessages(prev => [...prev, aiMessage]);
-
-      // تنفيذ الإجراءات إذا كانت متوفرة
-      if (response.action) {
-        await handleAIAction(response.action);
-      }
-
-    } catch (error) {
-      toast({
-        title: "خطأ في الإرسال",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAIAction = async (action: any) => {
-    // هنا يتم تنفيذ الإجراءات التي يقترحها AI
-    switch (action.type) {
-      case 'file-edit':
-        toast({
-          title: "تعديل الملف",
-          description: "تم اقتراح تعديلات على الملفات",
-        });
-        break;
-      case 'server-command':
-        toast({
-          title: "أمر السيرفر",
-          description: "تم اقتراح تنفيذ أوامر على السيرفر",
-        });
-        break;
-      case 'erp-config':
-        toast({
-          title: "إعداد ERP",
-          description: "تم اقتراح تكوينات لنظام ERP",
-        });
-        break;
-    }
-  };
-
-  const handleFileSelect = (file: any) => {
-    const message = `أريد فتح الملف: ${file.path}`;
-    handleSendMessage(message, 'deepseek');
-  };
-
-  const handleCommandExecute = (command: string) => {
-    const message = `نفذ الأمر التالي: ${command}`;
-    handleSendMessage(message, 'deepseek');
-  };
-
-  const handleSaveSettings = async () => {
-    // حفظ جميع الإعدادات
-    localStorage.setItem('deepsec-pilot-settings', JSON.stringify(apiSettings));
-    localStorage.setItem('deepsec-pilot-connectivity', JSON.stringify(connectivitySettings));
-    localStorage.setItem('deepsec-pilot-theme', JSON.stringify(themeSettings));
-    localStorage.setItem('deepsec-pilot-language', JSON.stringify(languageSettings));
-    localStorage.setItem('deepsec-pilot-ai-extended', JSON.stringify(aiExtendedSettings));
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
     
-    await initializeAIService(apiSettings);
-    setShowSettings(false);
-    
-    toast({
-      title: "تم الحفظ",
-      description: "تم حفظ جميع الإعدادات بنجاح",
-    });
+    try {
+      await sendMessage(message, selectedModel);
+      setMessage('');
+      toast.success('تم إرسال الرسالة بنجاح');
+    } catch (error) {
+      toast.error('فشل في إرسال الرسالة');
+    }
   };
 
-  const isSettingsValid = () => {
-    return aiExtendedSettings.deepseekApiKey || 
-           (aiExtendedSettings.azureEndpoint && aiExtendedSettings.azureApiKey && aiExtendedSettings.azureDeploymentName);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
 
   return (
-    <div className="main-layout bg-background relative overflow-hidden" dir={currentLanguage === 'ar' ? 'rtl' : 'ltr'}>
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent pointer-events-none" />
-      
-      {/* Header */}
-      <AppHeader
-        connectionStatus={connectionStatus}
-        onSettingsClick={() => setShowSettings(true)}
-        onLanguageChange={setCurrentLanguage}
-        currentLanguage={currentLanguage}
-      />
-
-      {/* Main Content */}
-      <div className="content-container relative z-10">
-        {/* Sidebar */}
-        <ProjectSidebar
-          onFileSelect={handleFileSelect}
-          onCommandExecute={handleCommandExecute}
-        />
-
-        {/* Main Content Area */}
-        <div className="scrollable-content">
-          {/* Tab Navigation - Enhanced */}
-          <div className="glass-card border-b border-border/50 backdrop-blur-sm sticky top-0 z-20">
-            <div className="flex relative">
-              <Button
-                variant={activeTab === 'chat' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('chat')}
-                className={`tab-enhanced rounded-none border-r border-border/30 px-6 py-3 transition-all duration-300 ${
-                  activeTab === 'chat' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
-                }`}
-              >
-                <Bot className="w-4 h-4 ml-2" />
-                <span className="font-medium">مساعد الذكاء الاصطناعي</span>
-              </Button>
-              <Button
-                variant={activeTab === 'repositories' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('repositories')}
-                className={`tab-enhanced rounded-none border-r border-border/30 px-6 py-3 transition-all duration-300 ${
-                  activeTab === 'repositories' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
-                }`}
-              >
-                <GitBranch className="w-4 h-4 ml-2" />
-                <span className="font-medium">إدارة المستودعات</span>
-              </Button>
-              <Button
-                variant={activeTab === 'performance' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('performance')}
-                className={`tab-enhanced rounded-none px-6 py-3 transition-all duration-300 ${
-                  activeTab === 'performance' ? 'active bg-gradient-to-r from-primary/10 to-accent/10 text-primary font-medium' : 'hover:bg-muted/30'
-                }`}
-              >
-                <Activity className="w-4 h-4 ml-2" />
-                <span className="font-medium">مراقب الأداء</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Content - Enhanced */}
-          <div className="flex-1 overflow-hidden relative">
-            {activeTab === 'chat' ? (
-              <div className="h-full p-6 animate-fade-in">
-                <div className="h-full glass-card p-4 rounded-xl">
-                  <EnhancedAIPlatform
-                    onSendMessage={handleSendMessage}
-                    messages={messages}
-                    isLoading={isLoading}
-                    modelStatus={connectionStatus}
-                  />
-                </div>
-              </div>
-            ) : activeTab === 'repositories' ? (
-              <div className="h-full p-6 animate-fade-in">
-                <div className="h-full glass-card rounded-xl overflow-hidden">
-                  <RepositoryManager />
-                </div>
-              </div>
-            ) : (
-              <div className="h-full p-6 animate-fade-in">
-                <div className="h-full glass-card rounded-xl overflow-hidden">
-                  <PerformanceMonitor />
-                </div>
-              </div>
-            )}
-          </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto p-4">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">مساعد الذكاء الاصطناعي</h1>
+          <p className="text-muted-foreground">منصة بسيطة وعملية للتفاعل مع الذكاء الاصطناعي</p>
         </div>
+
+        <Tabs defaultValue="chat" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="chat">المحادثة</TabsTrigger>
+            <TabsTrigger value="repositories">المستودعات</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="chat" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  المحادثة
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={selectedModel === 'deepseek' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedModel('deepseek')}
+                  >
+                    DeepSeek
+                  </Button>
+                  <Button
+                    variant={selectedModel === 'azure-openai' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedModel('azure-openai')}
+                  >
+                    Azure OpenAI
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={startNewConversation}
+                  >
+                    محادثة جديدة
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-96 w-full border rounded-lg p-4 mb-4">
+                  <div className="space-y-4">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        {msg.role === 'assistant' && (
+                          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <Bot className="w-4 h-4 text-primary-foreground" />
+                          </div>
+                        )}
+                        <div className={`max-w-[70%] p-3 rounded-lg ${
+                          msg.role === 'user' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted'
+                        }`}>
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-xs opacity-70 mt-1">
+                            {new Date(msg.created_at).toLocaleTimeString('ar-SA')}
+                          </p>
+                        </div>
+                        {msg.role === 'user' && (
+                          <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
+                            <User className="w-4 h-4 text-secondary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                          <Bot className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                        <div className="bg-muted p-3 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span>يكتب...</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </ScrollArea>
+                
+                <div className="flex gap-2">
+                  <Textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="اكتب رسالتك هنا..."
+                    className="flex-1"
+                    rows={3}
+                  />
+                  <Button
+                    onClick={handleSendMessage}
+                    disabled={loading || !message.trim()}
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="repositories" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  المستودعات
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* نموذج للمستودعات */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">مستودع نموذجي</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <Badge variant="secondary">نشط</Badge>
+                        <p className="text-sm text-muted-foreground">مستودع للاختبار</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline">
+                            تحديث
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            نشر
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
-
-      {/* Settings Dialog - Enhanced */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden glass-card animate-scale-in">
-          {/* Header with gradient */}
-          <DialogHeader className="pb-6 border-b border-border/30">
-            <DialogTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 bg-gradient-to-br from-primary to-accent rounded-lg">
-                <Settings className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
-                إعدادات التطبيق
-              </span>
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="overflow-y-auto max-h-[60vh] px-1">
-            <Tabs defaultValue="ai" className="w-full">
-              <TabsList className="grid w-full grid-cols-10 text-xs mb-6 glass-card p-1">
-                <TabsTrigger value="ai" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Bot className="w-3 h-3" />
-                  <span className="hidden md:inline">ذكاء اصطناعي</span>
-                </TabsTrigger>
-                <TabsTrigger value="connectivity" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Wifi className="w-3 h-3" />
-                  <span className="hidden md:inline">الاتصال</span>
-                </TabsTrigger>
-                <TabsTrigger value="theme" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Palette className="w-3 h-3" />
-                  <span className="hidden md:inline">الثيم</span>
-                </TabsTrigger>
-                <TabsTrigger value="language" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Languages className="w-3 h-3" />
-                  <span className="hidden md:inline">اللغة</span>
-                </TabsTrigger>
-                <TabsTrigger value="repositories" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <GitBranch className="w-3 h-3" />
-                  <span className="hidden md:inline">المستودعات</span>
-                </TabsTrigger>
-                <TabsTrigger value="server" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Server className="w-3 h-3" />
-                  <span className="hidden md:inline">السيرفر</span>
-                </TabsTrigger>
-                <TabsTrigger value="erp" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Database className="w-3 h-3" />
-                  <span className="hidden md:inline">ERP</span>
-                </TabsTrigger>
-                <TabsTrigger value="production" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <Rocket className="w-3 h-3" />
-                  <span className="hidden md:inline">الإنتاج</span>
-                </TabsTrigger>
-                <TabsTrigger value="backup" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <HardDrive className="w-3 h-3" />
-                  <span className="hidden md:inline">النسخ الاحتياطي</span>
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-1 transition-all duration-200 hover-scale">
-                  <BarChart3 className="w-3 h-3" />
-                  <span className="hidden md:inline">التحليلات</span>
-                </TabsTrigger>
-              </TabsList>
-
-            <TabsContent value="ai" className="space-y-4">
-              <AISettings
-                aiSettings={aiExtendedSettings}
-                onAISettingsChange={setAIExtendedSettings}
-              />
-            </TabsContent>
-
-            <TabsContent value="connectivity" className="space-y-4">
-              <ConnectivitySettings
-                gitHubSettings={connectivitySettings.gitHub}
-                onGitHubSettingsChange={(settings) => setConnectivitySettings(prev => ({
-                  ...prev,
-                  gitHub: settings
-                }))}
-                driveSettings={connectivitySettings.drive}
-                onDriveSettingsChange={(settings) => setConnectivitySettings(prev => ({
-                  ...prev,
-                  drive: settings
-                }))}
-              />
-            </TabsContent>
-
-            <TabsContent value="theme" className="space-y-4">
-              <ThemeSettings
-                themeSettings={themeSettings}
-                onThemeSettingsChange={setThemeSettings}
-              />
-            </TabsContent>
-
-            <TabsContent value="language" className="space-y-4">
-              <LanguageSettings
-                languageSettings={languageSettings}
-                onLanguageSettingsChange={setLanguageSettings}
-              />
-            </TabsContent>
-
-            <TabsContent value="repositories" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>إعدادات المستودعات</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="default-branch">الفرع الافتراضي</Label>
-                    <Input
-                      id="default-branch"
-                      placeholder="main"
-                      defaultValue="main"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="auto-sync">المزامنة التلقائية</Label>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="auto-sync" className="rounded" />
-                      <Label htmlFor="auto-sync" className="text-sm">تمكين المزامنة التلقائية كل ساعة</Label>
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="workspace-path">مسار مساحة العمل</Label>
-                    <Input
-                      id="workspace-path"
-                      placeholder="/opt/frappe-bench"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="server" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>إعدادات السيرفر</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="server-host">عنوان السيرفر</Label>
-                    <Input
-                      id="server-host"
-                      placeholder="localhost"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="ssh-user">مستخدم SSH</Label>
-                      <Input
-                        id="ssh-user"
-                        placeholder="frappe"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="ssh-port">منفذ SSH</Label>
-                      <Input
-                        id="ssh-port"
-                        placeholder="22"
-                        type="number"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="ssh-key">مفتاح SSH</Label>
-                    <Textarea
-                      id="ssh-key"
-                      placeholder="-----BEGIN PRIVATE KEY-----"
-                      className="font-mono text-sm"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="erp" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>إعدادات نظام ERP</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="erp-db-host">خادم قاعدة البيانات</Label>
-                    <Input
-                      id="erp-db-host"
-                      placeholder="localhost"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="erp-db-user">اسم المستخدم</Label>
-                      <Input
-                        id="erp-db-user"
-                        placeholder="erp_user"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="erp-db-pass">كلمة المرور</Label>
-                      <Input
-                        id="erp-db-pass"
-                        type="password"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="production" className="space-y-6">
-              <DeploymentStatus
-                isReady={deploymentStatus.isReady}
-                errors={deploymentStatus.errors}
-                warnings={deploymentStatus.warnings}
-                lastChecked={deploymentStatus.lastChecked}
-              />
-              <ProductionConfig />
-            </TabsContent>
-
-            <TabsContent value="backup" className="space-y-4">
-              <BackupSettings />
-            </TabsContent>
-
-            <TabsContent value="analytics" className="space-y-4">
-              <PerformanceMonitor />
-            </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4 border-t border-border/30">
-            <Button
-              variant="outline"
-              onClick={() => setShowSettings(false)}
-              className="btn-ghost-enhanced hover-scale"
-            >
-              إلغاء
-            </Button>
-            <Button
-              onClick={handleSaveSettings}
-              disabled={!isSettingsValid()}
-              className="btn-primary-enhanced"
-            >
-              حفظ الإعدادات
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Shortcuts Helper */}
-      <ShortcutsHelper
-        isOpen={showShortcuts}
-        onClose={() => setShowShortcuts(false)}
-        shortcuts={shortcuts}
-      />
     </div>
   );
 };
