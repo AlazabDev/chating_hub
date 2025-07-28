@@ -107,203 +107,219 @@ const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
   const getModelStatusBadge = (modelName: string, isConnected: boolean) => (
     <Badge variant={isConnected ? "default" : "secondary"} className="flex items-center gap-1">
       <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-gray-400'}`} />
-      {modelName}
+      <span className="text-white">{modelName}</span>
     </Badge>
   );
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-white">
-      {/* Header مع المعلومات الأساسية */}
-      <div className="p-6 border-b border-gray-700 bg-gradient-to-r from-blue-900/20 via-transparent to-purple-900/20">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              منصة الذكاء الاصطناعي المتطورة
-            </h1>
-            <p className="text-gray-300 mt-1">
-              إدارة شاملة للتطوير بالذكاء الاصطناعي
-            </p>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header محسن */}
+      <div className="sticky top-0 z-10 border-b border-gray-800 bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-gray-900/60">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">
+                منصة الذكاء الاصطناعي المتطورة
+              </h1>
+              <p className="text-gray-300 text-sm lg:text-base">
+                إدارة شاملة للتطوير بالذكاء الاصطناعي
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {getModelStatusBadge("DeepSeek", modelStatus.deepseek)}
+              {getModelStatusBadge("Azure OpenAI", modelStatus.azureOpenAI)}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {getModelStatusBadge("DeepSeek", modelStatus.deepseek)}
-            {getModelStatusBadge("Azure OpenAI", modelStatus.azureOpenAI)}
-          </div>
-        </div>
-
-        {/* إحصائيات سريعة */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400">المستودعات النشطة</p>
-                  <p className="text-2xl font-bold text-blue-400">{repositoryStats.active}</p>
-                </div>
-                <Bot className="w-8 h-8 text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400">محادثات اليوم</p>
-                  <p className="text-2xl font-bold text-purple-400">{conversationStats.today}</p>
-                </div>
-                <MessageSquare className="w-8 h-8 text-purple-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400">الأتمتة الممكنة</p>
-                  <p className="text-2xl font-bold text-green-400">{repositoryStats.automationEnabled}</p>
-                </div>
-                <Zap className="w-8 h-8 text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-400">تقدم المراحل</p>
-                  <p className="text-2xl font-bold text-yellow-400">{Math.round(workflowProgress)}%</p>
-                </div>
-                <Workflow className="w-8 h-8 text-yellow-400" />
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
 
-      {/* التبويبات الرئيسية */}
-      <div className="flex-1 flex flex-col">
-        <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="flex-1 flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 mx-6 mt-4 bg-gray-800 border-gray-700">
-            <TabsTrigger value="chat" className="flex items-center gap-2 text-white data-[state=active]:bg-blue-600">
-              <MessageSquare className="w-4 h-4" />
-              المساعد الذكي
-            </TabsTrigger>
-            <TabsTrigger value="workflow" className="flex items-center gap-2 text-white data-[state=active]:bg-blue-600">
-              <Workflow className="w-4 h-4" />
-              مراحل العمل
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2 text-white data-[state=active]:bg-blue-600">
-              <BarChart3 className="w-4 h-4" />
-              التحليلات
-            </TabsTrigger>
-          </TabsList>
+      {/* إحصائيات سريعة محسنة */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 truncate">المستودعات النشطة</p>
+                  <p className="text-xl lg:text-2xl font-bold text-blue-400">{repositoryStats.active}</p>
+                </div>
+                <Bot className="w-6 h-6 lg:w-8 lg:h-8 text-blue-400 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="flex-1 p-6">
-            <TabsContent value="chat" className="h-full m-0">
-              <EnhancedChatInterface
-                onSendMessage={onSendMessage}
-                messages={messages}
-                isLoading={isLoading}
-              />
-            </TabsContent>
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 truncate">محادثات اليوم</p>
+                  <p className="text-xl lg:text-2xl font-bold text-purple-400">{conversationStats.today}</p>
+                </div>
+                <MessageSquare className="w-6 h-6 lg:w-8 lg:h-8 text-purple-400 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="workflow" className="h-full m-0">
-              <AIWorkflowManager />
-            </TabsContent>
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 truncate">الأتمتة الممكنة</p>
+                  <p className="text-xl lg:text-2xl font-bold text-green-400">{repositoryStats.automationEnabled}</p>
+                </div>
+                <Zap className="w-6 h-6 lg:w-8 lg:h-8 text-green-400 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
 
-            <TabsContent value="analytics" className="h-full m-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* تحليلات الاستخدام */}
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <BarChart3 className="w-5 h-5 text-blue-400" />
-                      إحصائيات الاستخدام
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">المحادثات الكلية</span>
+          <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-400 truncate">تقدم المراحل</p>
+                  <p className="text-xl lg:text-2xl font-bold text-yellow-400">{Math.round(workflowProgress)}%</p>
+                </div>
+                <Workflow className="w-6 h-6 lg:w-8 lg:h-8 text-yellow-400 flex-shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* التبويبات المحسنة */}
+        <div className="bg-gray-800/30 rounded-lg border border-gray-700 backdrop-blur">
+          <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)} className="w-full">
+            <div className="border-b border-gray-700">
+              <TabsList className="grid w-full grid-cols-3 bg-transparent border-0 h-12">
+                <TabsTrigger 
+                  value="chat" 
+                  className="flex items-center gap-2 text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span className="hidden sm:inline">المساعد الذكي</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="workflow" 
+                  className="flex items-center gap-2 text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
+                >
+                  <Workflow className="w-4 h-4" />
+                  <span className="hidden sm:inline">مراحل العمل</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="flex items-center gap-2 text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span className="hidden sm:inline">التحليلات</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <div className="p-4 lg:p-6">
+              <TabsContent value="chat" className="m-0 h-[600px] lg:h-[700px]">
+                <EnhancedChatInterface
+                  onSendMessage={onSendMessage}
+                  messages={messages}
+                  isLoading={isLoading}
+                />
+              </TabsContent>
+
+              <TabsContent value="workflow" className="m-0 h-[600px] lg:h-[700px] overflow-y-auto">
+                <AIWorkflowManager />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="m-0 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+                  {/* تحليلات الاستخدام */}
+                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-white text-lg">
+                        <BarChart3 className="w-5 h-5 text-blue-400" />
+                        إحصائيات الاستخدام
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">المحادثات الكلية</span>
                         <span className="font-medium text-white">{conversationStats.total}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">هذا الأسبوع</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">هذا الأسبوع</span>
                         <span className="font-medium text-white">{conversationStats.thisWeek}</span>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="pt-2">
+                        <Progress value={60} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                {/* حالة المستودعات */}
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Bot className="w-5 h-5 text-purple-400" />
-                      حالة المستودعات
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">إجمالي المستودعات</span>
+                  {/* حالة المستودعات */}
+                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-white text-lg">
+                        <Bot className="w-5 h-5 text-purple-400" />
+                        حالة المستودعات
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">إجمالي المستودعات</span>
                         <span className="font-medium text-white">{repositoryStats.total}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">AI مفعل</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300 text-sm">AI مفعل</span>
                         <span className="font-medium text-white">{repositoryStats.aiEnabled}</span>
                       </div>
-                      <Progress 
-                        value={repositoryStats.total > 0 ? (repositoryStats.aiEnabled / repositoryStats.total) * 100 : 0} 
-                        className="h-2"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* تقدم المراحل */}
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
-                      <Workflow className="w-5 h-5 text-green-400" />
-                      تقدم المراحل
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-green-400 mb-2">
-                        {Math.round(workflowProgress)}%
+                      <div className="pt-2">
+                        <Progress 
+                          value={repositoryStats.total > 0 ? (repositoryStats.aiEnabled / repositoryStats.total) * 100 : 0} 
+                          className="h-2"
+                        />
                       </div>
-                      <Progress value={workflowProgress} className="h-3" />
-                      <p className="text-xs text-gray-400 mt-2">
-                        مراحل العمل المكتملة
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
+                  {/* تقدم المراحل */}
+                  <Card className="bg-gray-800/50 border-gray-700 backdrop-blur lg:col-span-2 xl:col-span-1">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-white text-lg">
+                        <Workflow className="w-5 h-5 text-green-400" />
+                        تقدم المراحل
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="text-center">
+                        <div className="text-2xl lg:text-3xl font-bold text-green-400 mb-2">
+                          {Math.round(workflowProgress)}%
+                        </div>
+                        <Progress value={workflowProgress} className="h-3 mb-2" />
+                        <p className="text-xs text-gray-400">
+                          مراحل العمل المكتملة
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
                 {/* حالة النماذج */}
-                <Card className="bg-gray-800 border-gray-700 md:col-span-2 lg:col-span-3">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-white">
+                <Card className="bg-gray-800/50 border-gray-700 backdrop-blur">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-white text-lg">
                       <Brain className="w-5 h-5 text-blue-400" />
                       حالة نماذج الذكاء الاصطناعي
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg backdrop-blur">
                         <div className="flex items-center gap-3">
-                          <Brain className="w-8 h-8 text-blue-400" />
-                          <div>
+                          <Brain className="w-8 h-8 text-blue-400 flex-shrink-0" />
+                          <div className="min-w-0">
                             <h3 className="font-semibold text-white">DeepSeek</h3>
-                            <p className="text-sm text-gray-400">النموذج الأساسي</p>
+                            <p className="text-sm text-gray-400 truncate">النموذج الأساسي</p>
                           </div>
                         </div>
                         {modelStatus.deepseek ? (
-                          <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+                          <Badge variant="default" className="flex items-center gap-1 bg-green-600 text-white">
                             <CheckCircle className="w-3 h-3" />
                             متصل
                           </Badge>
@@ -315,16 +331,16 @@ const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between p-4 bg-gray-700 rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg backdrop-blur">
                         <div className="flex items-center gap-3">
-                          <Cpu className="w-8 h-8 text-blue-400" />
-                          <div>
+                          <Cpu className="w-8 h-8 text-blue-400 flex-shrink-0" />
+                          <div className="min-w-0">
                             <h3 className="font-semibold text-white">Azure OpenAI</h3>
-                            <p className="text-sm text-gray-400">النموذج المتقدم</p>
+                            <p className="text-sm text-gray-400 truncate">النموذج المتقدم</p>
                           </div>
                         </div>
                         {modelStatus.azureOpenAI ? (
-                          <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+                          <Badge variant="default" className="flex items-center gap-1 bg-green-600 text-white">
                             <CheckCircle className="w-3 h-3" />
                             متصل
                           </Badge>
@@ -338,10 +354,10 @@ const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            </TabsContent>
-          </div>
-        </Tabs>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
     </div>
   );

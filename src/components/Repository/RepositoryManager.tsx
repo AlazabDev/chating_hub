@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -206,204 +205,232 @@ const RepositoryManager: React.FC = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">
-            إدارة المستودعات المتعددة
-          </h1>
-          <p className="text-gray-300 mt-2">
-            إدارة مشاريع Frappe الـ30 والعمليات المتقدمة
-          </p>
-        </div>
-
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white">
-              <Plus className="w-4 h-4 ml-2" />
-              إضافة مستودع
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>إضافة مستودع جديد</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">اسم المستودع</Label>
-                <Input
-                  id="name"
-                  value={newRepo.name}
-                  onChange={(e) => setNewRepo(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="اسم المشروع"
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">الوصف</Label>
-                <Textarea
-                  id="description"
-                  value={newRepo.description}
-                  onChange={(e) => setNewRepo(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="وصف المشروع"
-                />
-              </div>
-              <div>
-                <Label htmlFor="frappe_type">نوع Frappe</Label>
-                <Select
-                  value={newRepo.frappe_type}
-                  onValueChange={(value: any) => setNewRepo(prev => ({ ...prev, frappe_type: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="erpnext">ERPNext</SelectItem>
-                    <SelectItem value="hrms">HRMS</SelectItem>
-                    <SelectItem value="crm">CRM</SelectItem>
-                    <SelectItem value="helpdesk">HelpDesk</SelectItem>
-                    <SelectItem value="custom">مخصص</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="git_url">رابط Git</Label>
-                <Input
-                  id="git_url"
-                  value={newRepo.git_url}
-                  onChange={(e) => setNewRepo(prev => ({ ...prev, git_url: e.target.value }))}
-                  placeholder="https://github.com/..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="branch">الفرع</Label>
-                <Input
-                  id="branch"
-                  value={newRepo.branch}
-                  onChange={(e) => setNewRepo(prev => ({ ...prev, branch: e.target.value }))}
-                  placeholder="main"
-                />
-              </div>
-              <Button 
-                onClick={createRepository} 
-                disabled={isLoading || !newRepo.name}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-              >
-                {isLoading ? <RefreshCw className="w-4 h-4 animate-spin ml-2" /> : null}
-                إنشاء المستودع
-              </Button>
+    <div className="min-h-screen bg-gray-900 text-white">
+      {/* Header محسن */}
+      <div className="sticky top-0 z-10 border-b border-gray-800 bg-gray-900/95 backdrop-blur">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">
+                إدارة المستودعات المتعددة
+              </h1>
+              <p className="text-gray-300 text-sm lg:text-base">
+                إدارة مشاريع Frappe الـ30 والعمليات المتقدمة
+              </p>
             </div>
-          </DialogContent>
-        </Dialog>
+
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="w-4 h-4 ml-2" />
+                  إضافة مستودع
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md bg-gray-800 border-gray-700">
+                <DialogHeader>
+                  <DialogTitle className="text-white">إضافة مستودع جديد</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name" className="text-gray-300">اسم المستودع</Label>
+                    <Input
+                      id="name"
+                      value={newRepo.name}
+                      onChange={(e) => setNewRepo(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="اسم المشروع"
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description" className="text-gray-300">الوصف</Label>
+                    <Textarea
+                      id="description"
+                      value={newRepo.description}
+                      onChange={(e) => setNewRepo(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="وصف المشروع"
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="frappe_type" className="text-gray-300">نوع Frappe</Label>
+                    <Select
+                      value={newRepo.frappe_type}
+                      onValueChange={(value: any) => setNewRepo(prev => ({ ...prev, frappe_type: value }))}
+                    >
+                      <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600">
+                        <SelectItem value="erpnext" className="text-white">ERPNext</SelectItem>
+                        <SelectItem value="hrms" className="text-white">HRMS</SelectItem>
+                        <SelectItem value="crm" className="text-white">CRM</SelectItem>
+                        <SelectItem value="helpdesk" className="text-white">HelpDesk</SelectItem>
+                        <SelectItem value="custom" className="text-white">مخصص</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="git_url" className="text-gray-300">رابط Git</Label>
+                    <Input
+                      id="git_url"
+                      value={newRepo.git_url}
+                      onChange={(e) => setNewRepo(prev => ({ ...prev, git_url: e.target.value }))}
+                      placeholder="https://github.com/..."
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="branch" className="text-gray-300">الفرع</Label>
+                    <Input
+                      id="branch"
+                      value={newRepo.branch}
+                      onChange={(e) => setNewRepo(prev => ({ ...prev, branch: e.target.value }))}
+                      placeholder="main"
+                      className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    />
+                  </div>
+                  <Button 
+                    onClick={createRepository} 
+                    disabled={isLoading || !newRepo.name}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin ml-2" /> : null}
+                    إنشاء المستودع
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="repositories" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="repositories">المستودعات</TabsTrigger>
-          <TabsTrigger value="operations">العمليات</TabsTrigger>
-        </TabsList>
+      {/* المحتوى الرئيسي */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="bg-gray-800/30 rounded-lg border border-gray-700 backdrop-blur">
+          <Tabs defaultValue="repositories" className="w-full">
+            <div className="border-b border-gray-700">
+              <TabsList className="grid w-full grid-cols-2 bg-transparent border-0 h-12">
+                <TabsTrigger 
+                  value="repositories" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
+                >
+                  المستودعات
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="operations" 
+                  className="text-gray-300 data-[state=active]:text-white data-[state=active]:bg-blue-600/20 data-[state=active]:border-b-2 data-[state=active]:border-blue-500 rounded-none border-b-2 border-transparent"
+                >
+                  العمليات
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-        <TabsContent value="repositories" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {repositories.map((repo) => (
-              <Card key={repo.id} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-all duration-300">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getFrappeTypeIcon(repo.frappe_type)}
-                      <CardTitle className="text-lg text-white">{repo.name}</CardTitle>
-                    </div>
-                    <Badge className={`${getStatusColor(repo.status)} text-white`}>
-                      {repo.status}
-                    </Badge>
-                  </div>
-                  {repo.description && (
-                    <p className="text-sm text-gray-300">{repo.description}</p>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
-                    <GitBranch className="w-3 h-3" />
-                    {repo.branch}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => executeOperation(repo.id, 'pull')}
-                      className="w-full border-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Download className="w-3 h-3 ml-1" />
-                      Pull
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => executeOperation(repo.id, 'push')}
-                      className="w-full border-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Upload className="w-3 h-3 ml-1" />
-                      Push
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => executeOperation(repo.id, 'build')}
-                      className="w-full border-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Settings className="w-3 h-3 ml-1" />
-                      Build
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => executeOperation(repo.id, 'deploy')}
-                      className="w-full border-gray-600 text-white hover:bg-gray-700"
-                    >
-                      <Play className="w-3 h-3 ml-1" />
-                      Deploy
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+            <div className="p-4 lg:p-6">
+              <TabsContent value="repositories" className="space-y-4 m-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {repositories.map((repo) => (
+                    <Card key={repo.id} className="bg-gray-800/50 border-gray-700 hover:shadow-lg transition-all duration-300 backdrop-blur">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {getFrappeTypeIcon(repo.frappe_type)}
+                            <CardTitle className="text-lg text-white truncate">{repo.name}</CardTitle>
+                          </div>
+                          <Badge className={`${getStatusColor(repo.status)} text-white flex-shrink-0`}>
+                            {repo.status}
+                          </Badge>
+                        </div>
+                        {repo.description && (
+                          <p className="text-sm text-gray-300 line-clamp-2">{repo.description}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <GitBranch className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{repo.branch}</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => executeOperation(repo.id, 'pull')}
+                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
+                          >
+                            <Download className="w-3 h-3 ml-1" />
+                            Pull
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => executeOperation(repo.id, 'push')}
+                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
+                          >
+                            <Upload className="w-3 h-3 ml-1" />
+                            Push
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => executeOperation(repo.id, 'build')}
+                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
+                          >
+                            <Settings className="w-3 h-3 ml-1" />
+                            Build
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => executeOperation(repo.id, 'deploy')}
+                            className="w-full border-gray-600 text-white hover:bg-gray-700 text-xs"
+                          >
+                            <Play className="w-3 h-3 ml-1" />
+                            Deploy
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
 
-        <TabsContent value="operations" className="space-y-4">
-          <div className="space-y-3">
-            {operations.map((operation) => (
-              <Card key={operation.id} className="bg-gray-800 border-gray-700">
-                <CardContent className="pt-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Terminal className="w-4 h-4 text-blue-500" />
-                      <div>
-                        <p className="font-medium text-white">{operation.operation_type}</p>
-                        <p className="text-sm text-gray-400">
-                          {new Date(operation.started_at).toLocaleString('ar-SA')}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant={
-                      operation.status === 'completed' ? 'default' :
-                      operation.status === 'failed' ? 'destructive' :
-                      operation.status === 'running' ? 'secondary' : 'outline'
-                    }>
-                      {operation.status}
-                    </Badge>
-                  </div>
-                  {operation.logs && (
-                    <div className="mt-3 p-2 bg-gray-900 rounded text-sm font-mono text-green-400">
-                      {operation.logs}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
+              <TabsContent value="operations" className="space-y-3 m-0">
+                <div className="max-h-[600px] overflow-y-auto space-y-3">
+                  {operations.map((operation) => (
+                    <Card key={operation.id} className="bg-gray-800/50 border-gray-700 backdrop-blur">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Terminal className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-white">{operation.operation_type}</p>
+                              <p className="text-sm text-gray-400 truncate">
+                                {new Date(operation.started_at).toLocaleString('ar-SA')}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant={
+                            operation.status === 'completed' ? 'default' :
+                            operation.status === 'failed' ? 'destructive' :
+                            operation.status === 'running' ? 'secondary' : 'outline'
+                          } className="flex-shrink-0">
+                            {operation.status}
+                          </Badge>
+                        </div>
+                        {operation.logs && (
+                          <div className="mt-3 p-2 bg-gray-900/50 rounded text-sm font-mono text-green-400 overflow-x-auto">
+                            {operation.logs}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
