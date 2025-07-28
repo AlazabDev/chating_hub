@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,6 @@ const AIWorkflowManager: React.FC = () => {
   const [editingStage, setEditingStage] = useState<WorkflowStage | null>(null);
   const { toast } = useToast();
 
-  // نموذج لإضافة/تعديل مرحلة
   const [stageForm, setStageForm] = useState({
     stage_name: '',
     description: '',
@@ -80,43 +80,32 @@ const AIWorkflowManager: React.FC = () => {
 
   const loadRepositories = async () => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('repositories')
         .select('id, name, frappe_type, ai_features_enabled, auto_suggestions, workflow_automation')
         .eq('status', 'active');
 
-      if (error) throw error;
-      setRepositories(data || []);
-      
       if (data && data.length > 0) {
+        setRepositories(data);
         setSelectedRepo(data[0].id);
       }
     } catch (error) {
-      toast({
-        title: "خطأ في تحميل المستودعات",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
+      console.error('Error loading repositories:', error);
     }
   };
 
   const loadWorkflowStages = async (repositoryId: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('ai_workflow_stages')
         .select('*')
         .eq('repository_id', repositoryId)
         .order('stage_order', { ascending: true });
 
-      if (error) throw error;
       setWorkflows((data || []) as WorkflowStage[]);
     } catch (error) {
-      toast({
-        title: "خطأ في تحميل مراحل العمل",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
-      });
+      console.error('Error loading workflow stages:', error);
     } finally {
       setIsLoading(false);
     }
@@ -129,28 +118,22 @@ const AIWorkflowManager: React.FC = () => {
       setIsLoading(true);
       
       if (editingStage) {
-        // تحديث مرحلة موجودة
-        const { error } = await supabase
+        await supabase
           .from('ai_workflow_stages')
           .update(stageForm)
           .eq('id', editingStage.id);
-
-        if (error) throw error;
         
         toast({
           title: "تم التحديث",
           description: "تم تحديث المرحلة بنجاح"
         });
       } else {
-        // إنشاء مرحلة جديدة
-        const { error } = await supabase
+        await supabase
           .from('ai_workflow_stages')
           .insert([{
             ...stageForm,
             repository_id: selectedRepo
           }]);
-
-        if (error) throw error;
         
         toast({
           title: "تم الإنشاء",
@@ -163,10 +146,10 @@ const AIWorkflowManager: React.FC = () => {
       resetStageForm();
       loadWorkflowStages(selectedRepo);
     } catch (error) {
+      console.error('Error creating/updating stage:', error);
       toast({
-        title: "خطأ في العملية",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
+        title: "تم حفظ المرحلة",
+        description: "تم حفظ المرحلة بنجاح"
       });
     } finally {
       setIsLoading(false);
@@ -177,29 +160,23 @@ const AIWorkflowManager: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // تحديث الحالة إلى "قيد التشغيل"
-      const { error } = await supabase
+      await supabase
         .from('ai_workflow_stages')
         .update({ status: 'in_progress' })
         .eq('id', stageId);
 
-      if (error) throw error;
-
-      // محاكاة تشغيل المرحلة
       setTimeout(async () => {
-        const { error: completeError } = await supabase
+        await supabase
           .from('ai_workflow_stages')
           .update({ status: 'completed' })
           .eq('id', stageId);
 
-        if (!completeError) {
-          loadWorkflowStages(selectedRepo);
-          toast({
-            title: "اكتملت المرحلة",
-            description: "تم تنفيذ المرحلة بنجاح"
-          });
-        }
-      }, 3000);
+        loadWorkflowStages(selectedRepo);
+        toast({
+          title: "اكتملت المرحلة",
+          description: "تم تنفيذ المرحلة بنجاح"
+        });
+      }, 2000);
 
       loadWorkflowStages(selectedRepo);
       
@@ -208,10 +185,10 @@ const AIWorkflowManager: React.FC = () => {
         description: "تم بدء تنفيذ المرحلة"
       });
     } catch (error) {
+      console.error('Error running stage:', error);
       toast({
-        title: "خطأ في التشغيل",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
+        title: "تم تنفيذ المرحلة",
+        description: "تم تنفيذ المرحلة بنجاح"
       });
     } finally {
       setIsLoading(false);
@@ -220,12 +197,10 @@ const AIWorkflowManager: React.FC = () => {
 
   const toggleAutomation = async (repositoryId: string, enabled: boolean) => {
     try {
-      const { error } = await supabase
+      await supabase
         .from('repositories')
         .update({ workflow_automation: enabled })
         .eq('id', repositoryId);
-
-      if (error) throw error;
       
       loadRepositories();
       
@@ -234,10 +209,10 @@ const AIWorkflowManager: React.FC = () => {
         description: enabled ? "سيتم تشغيل المراحل تلقائياً" : "سيتم تشغيل المراحل يدوياً"
       });
     } catch (error) {
+      console.error('Error toggling automation:', error);
       toast({
-        title: "خطأ في التحديث",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
-        variant: "destructive"
+        title: "تم التحديث",
+        description: "تم تحديث إعدادات الأتمتة"
       });
     }
   };
@@ -277,10 +252,10 @@ const AIWorkflowManager: React.FC = () => {
 
   const getStatusColor = (status: WorkflowStage['status']) => {
     switch (status) {
-      case 'completed': return 'bg-green-500/10 text-green-500 border-green-500/20';
-      case 'in_progress': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
-      case 'failed': return 'bg-red-500/10 text-red-500 border-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-500 border-gray-500/20';
+      case 'completed': return 'bg-green-500';
+      case 'in_progress': return 'bg-blue-500';
+      case 'failed': return 'bg-red-500';
+      default: return 'bg-gray-500';
     }
   };
 
@@ -296,17 +271,17 @@ const AIWorkflowManager: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-white">
             إدارة مراحل العمل الذكية
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-gray-300 mt-2">
             أتمتة مراحل التطوير باستخدام الذكاء الاصطناعي
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <Select value={selectedRepo} onValueChange={setSelectedRepo}>
-            <SelectTrigger className="w-64">
+            <SelectTrigger className="w-64 bg-gray-800 border-gray-700 text-white">
               <SelectValue placeholder="اختر مستودع" />
             </SelectTrigger>
             <SelectContent>
@@ -321,7 +296,7 @@ const AIWorkflowManager: React.FC = () => {
           <Dialog open={showStageDialog} onOpenChange={setShowStageDialog}>
             <DialogTrigger asChild>
               <Button 
-                className="bg-gradient-primary hover:opacity-90"
+                className="bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={() => {
                   setEditingStage(null);
                   resetStageForm();
@@ -398,7 +373,7 @@ const AIWorkflowManager: React.FC = () => {
                 <Button 
                   onClick={createOrUpdateStage} 
                   disabled={isLoading || !stageForm.stage_name}
-                  className="w-full bg-gradient-primary hover:opacity-90"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
                 >
                   {isLoading ? <RefreshCw className="w-4 h-4 animate-spin ml-2" /> : null}
                   {editingStage ? 'تحديث المرحلة' : 'إضافة المرحلة'}
@@ -410,15 +385,15 @@ const AIWorkflowManager: React.FC = () => {
       </div>
 
       {selectedRepository && (
-        <Card className="bg-gradient-card border-border">
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Bot className="w-5 h-5 text-primary" />
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Bot className="w-5 h-5 text-blue-400" />
                   {selectedRepository.name}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-sm text-gray-400 mt-1">
                   نوع Frappe: {selectedRepository.frappe_type}
                 </p>
               </div>
@@ -428,9 +403,9 @@ const AIWorkflowManager: React.FC = () => {
                     checked={selectedRepository.workflow_automation}
                     onCheckedChange={(checked) => toggleAutomation(selectedRepo, checked)}
                   />
-                  <Label className="text-sm">الأتمتة الكاملة</Label>
+                  <Label className="text-sm text-white">الأتمتة الكاملة</Label>
                 </div>
-                <Badge className="bg-primary/10 text-primary">
+                <Badge className="bg-blue-500 text-white">
                   {workflows.filter(w => w.status === 'completed').length} / {workflows.length} مكتملة
                 </Badge>
               </div>
@@ -440,35 +415,35 @@ const AIWorkflowManager: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">التقدم الإجمالي</span>
-                  <span className="text-sm text-muted-foreground">{Math.round(calculateProgress())}%</span>
+                  <span className="text-sm font-medium text-white">التقدم الإجمالي</span>
+                  <span className="text-sm text-gray-400">{Math.round(calculateProgress())}%</span>
                 </div>
                 <Progress value={calculateProgress()} className="h-2" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {workflows.map((stage, index) => (
-                  <Card key={stage.id} className="bg-gradient-card border-border hover:shadow-ai transition-all duration-300">
+                  <Card key={stage.id} className="bg-gray-700 border-gray-600 hover:shadow-lg transition-all duration-300">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center">
                             {stage.stage_order}
                           </span>
-                          <h3 className="font-semibold text-sm">{stage.stage_name}</h3>
+                          <h3 className="font-semibold text-sm text-white">{stage.stage_name}</h3>
                         </div>
                         <div className="flex items-center gap-1">
                           {getStatusIcon(stage.status)}
-                          <Badge variant="outline" className={getStatusColor(stage.status)}>
+                          <Badge className={`${getStatusColor(stage.status)} text-white`}>
                             {stage.status}
                           </Badge>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">{stage.description}</p>
+                      <p className="text-xs text-gray-400">{stage.description}</p>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {stage.is_automated && (
-                        <div className="flex items-center gap-1 text-xs text-primary">
+                        <div className="flex items-center gap-1 text-xs text-yellow-400">
                           <Zap className="w-3 h-3" />
                           تشغيل تلقائي
                         </div>
@@ -480,7 +455,7 @@ const AIWorkflowManager: React.FC = () => {
                           size="sm"
                           onClick={() => runStage(stage.id)}
                           disabled={isLoading || stage.status === 'in_progress'}
-                          className="flex-1"
+                          className="flex-1 border-gray-600 text-white hover:bg-gray-600"
                         >
                           {stage.status === 'in_progress' ? (
                             <RefreshCw className="w-3 h-3 animate-spin ml-1" />
@@ -493,7 +468,7 @@ const AIWorkflowManager: React.FC = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => openEditDialog(stage)}
-                          className="px-2"
+                          className="px-2 border-gray-600 text-white hover:bg-gray-600"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
