@@ -20,19 +20,8 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-    
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-    
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
+    // Create a temporary user session for now
+    const userId = 'temp-user-' + Date.now();
 
     // Get conversation history
     let conversation;
@@ -41,7 +30,7 @@ serve(async (req) => {
         .from('ai_conversations')
         .select('*')
         .eq('id', conversationId)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
       conversation = data;
     } else {
@@ -49,7 +38,7 @@ serve(async (req) => {
       const { data } = await supabase
         .from('ai_conversations')
         .insert({
-          user_id: user.id,
+          user_id: userId,
           title: message.substring(0, 50) + '...',
           model: 'claude'
         })

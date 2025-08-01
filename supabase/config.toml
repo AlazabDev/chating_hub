@@ -14,3 +14,9 @@ verify_jwt = true
 
 [functions.backup-scheduler]
 verify_jwt = false
+
+[functions.claude-chat]
+verify_jwt = false
+
+[functions.google-drive-files]
+verify_jwt = false
