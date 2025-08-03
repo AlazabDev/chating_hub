@@ -8,7 +8,8 @@ import GoogleDriveManager from '@/components/FileManager/GoogleDriveManager';
 import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
 import { AdvancedCodeEditor } from '@/components/CodeEditor/AdvancedCodeEditor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Folder, Code, GitBranch, Terminal } from 'lucide-react';
+import { MessageSquare, Folder, Code, GitBranch, Terminal, Settings } from 'lucide-react';
+import { AIConnectionTester } from '@/components/AI/AIConnectionTester';
 
 interface ContextFile {
   id: string;
@@ -89,7 +90,7 @@ const Index = () => {
             <AdvancedCodeEditor onClose={() => setShowCodeEditor(false)} />
           ) : (
             <Tabs defaultValue="chat" className="h-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsList className="grid w-full grid-cols-5 mb-6">
                 <TabsTrigger value="chat" className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
                   المحادثة
@@ -105,6 +106,10 @@ const Index = () => {
                 <TabsTrigger value="repositories" className="flex items-center gap-2">
                   <GitBranch className="w-4 h-4" />
                   المستودعات
+                </TabsTrigger>
+                <TabsTrigger value="ai-status" className="flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  حالة الذكاء الاصطناعي
                 </TabsTrigger>
               </TabsList>
 
@@ -162,6 +167,10 @@ const Index = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="ai-status" className="h-full">
+                <AIConnectionTester />
               </TabsContent>
             </Tabs>
           )}
