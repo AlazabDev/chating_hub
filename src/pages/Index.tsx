@@ -4,11 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import ClaudeChatInterface from '@/components/Chat/ClaudeChatInterface';
+import EnhancedAIChat from '@/components/Chat/EnhancedAIChat';
 import GoogleDriveManager from '@/components/FileManager/GoogleDriveManager';
 import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
 import { AdvancedCodeEditor } from '@/components/CodeEditor/AdvancedCodeEditor';
+import RepositoryManager from '@/components/Repository/RepositoryManager';
+import DashboardAnalytics from '@/components/Analytics/DashboardAnalytics';
+import SystemSettings from '@/components/Settings/SystemSettings';
+import ProductionDashboard from '@/components/Production/ProductionDashboard';
+import AIStatusOverview from '@/components/AI/AIStatusOverview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Folder, Code, GitBranch, Terminal, Settings } from 'lucide-react';
+import { MessageSquare, Folder, Code, GitBranch, Terminal, Settings, BarChart3, Zap, Rocket, Activity } from 'lucide-react';
 import { AIConnectionTester } from '@/components/AI/AIConnectionTester';
 
 interface ContextFile {
@@ -90,10 +96,14 @@ const Index = () => {
             <AdvancedCodeEditor onClose={() => setShowCodeEditor(false)} />
           ) : (
             <Tabs defaultValue="chat" className="h-full">
-              <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsList className="grid w-full grid-cols-9 mb-6">
                 <TabsTrigger value="chat" className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4" />
-                  المحادثة
+                  Claude
+                </TabsTrigger>
+                <TabsTrigger value="ai-chat" className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  ذكاء متقدم
                 </TabsTrigger>
                 <TabsTrigger value="files" className="flex items-center gap-2">
                   <Folder className="w-4 h-4" />
@@ -107,9 +117,21 @@ const Index = () => {
                   <GitBranch className="w-4 h-4" />
                   المستودعات
                 </TabsTrigger>
+                <TabsTrigger value="production" className="flex items-center gap-2">
+                  <Rocket className="w-4 h-4" />
+                  الإنتاج
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4" />
+                  التحليلات
+                </TabsTrigger>
                 <TabsTrigger value="ai-status" className="flex items-center gap-2">
+                  <Activity className="w-4 h-4" />
+                  حالة الذكاء
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  حالة الذكاء الاصطناعي
+                  الإعدادات
                 </TabsTrigger>
               </TabsList>
 
@@ -119,6 +141,12 @@ const Index = () => {
                     contextFiles={contextFiles}
                     onFileRequest={handleFileRequest}
                   />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="ai-chat" className="h-full">
+                <div className="h-full">
+                  <EnhancedAIChat />
                 </div>
               </TabsContent>
 
@@ -136,41 +164,23 @@ const Index = () => {
               </TabsContent>
 
               <TabsContent value="repositories" className="h-full">
-                <Card className="h-full">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <GitBranch className="w-5 h-5" />
-                      المستودعات
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">مشروع العينة</h3>
-                          <Badge variant="secondary">نشط</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          وصف المشروع والمعلومات الأساسية حوله
-                        </p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Terminal className="w-4 h-4 ml-1" />
-                            تحديث
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Code className="w-4 h-4 ml-1" />
-                            نشر
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <RepositoryManager />
+              </TabsContent>
+
+              <TabsContent value="production" className="h-full">
+                <ProductionDashboard />
+              </TabsContent>
+
+              <TabsContent value="analytics" className="h-full">
+                <DashboardAnalytics />
               </TabsContent>
 
               <TabsContent value="ai-status" className="h-full">
-                <AIConnectionTester />
+                <AIStatusOverview />
+              </TabsContent>
+
+              <TabsContent value="settings" className="h-full">
+                <SystemSettings />
               </TabsContent>
             </Tabs>
           )}
