@@ -167,6 +167,98 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          encrypted_key: string
+          id: string
+          key_name: string
+          last_used: string | null
+          metadata: Json | null
+          provider: string
+          status: string
+          updated_at: string
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_key: string
+          id?: string
+          key_name: string
+          last_used?: string | null
+          metadata?: Json | null
+          provider: string
+          status?: string
+          updated_at?: string
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_key?: string
+          id?: string
+          key_name?: string
+          last_used?: string | null
+          metadata?: Json | null
+          provider?: string
+          status?: string
+          updated_at?: string
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_usage_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          endpoint: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          provider: string
+          request_count: number | null
+          response_time_ms: number | null
+          status_code: number | null
+          user_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          provider: string
+          request_count?: number | null
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          provider?: string
+          request_count?: number | null
+          response_time_ms?: number | null
+          status_code?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           assigned_at: string | null
@@ -535,6 +627,42 @@ export type Database = {
           manager_id?: string | null
           name?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      integrations: {
+        Row: {
+          configuration: Json
+          created_at: string
+          id: string
+          integration_type: string
+          is_enabled: boolean | null
+          last_sync: string | null
+          provider: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_type: string
+          is_enabled?: boolean | null
+          last_sync?: string | null
+          provider: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          integration_type?: string
+          is_enabled?: boolean | null
+          last_sync?: string | null
+          provider?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1476,6 +1604,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      decrypt_api_key: {
+        Args: { encrypted_key: string }
+        Returns: string
+      }
+      encrypt_api_key: {
+        Args: { key_value: string }
+        Returns: string
+      }
       schedule_user_backup: {
         Args: { user_uuid: string }
         Returns: undefined

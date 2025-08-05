@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import IntegrationsManager from './IntegrationsManager';
 import { 
   Settings, 
   Database, 
@@ -177,8 +178,9 @@ const SystemSettings: React.FC = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="general">عام</TabsTrigger>
+          <TabsTrigger value="integrations">التكاملات</TabsTrigger>
           <TabsTrigger value="database">قاعدة البيانات</TabsTrigger>
           <TabsTrigger value="security">الأمان</TabsTrigger>
           <TabsTrigger value="performance">الأداء</TabsTrigger>
@@ -272,6 +274,10 @@ const SystemSettings: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="integrations">
+          <IntegrationsManager />
         </TabsContent>
 
         <TabsContent value="database">
