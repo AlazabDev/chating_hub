@@ -1,4 +1,4 @@
-# DeepSec Pilot - AI-Powered ERP Development Assistant
+# Chating Hub - AI-Powered ERP Development Assistant
 
 ## 🎯 نظرة عامة
 
@@ -111,3 +111,22 @@ npm run dev
 ---
 
 🌟 **للحصول على أفضل تجربة، تأكد من تكوين API keys في الإعدادات**
+
+
+
+
+## Logo and Trademark Policy
+
+Please read our [Logo and Trademark Policy](TRADEMARK_POLICY.md).
+
+<br />
+<br />
+<div align="center" style="padding-top: 0.75rem;">
+	<a href="https://alazab.dev" target="_blank">
+		<picture>
+			<source media="(prefers-color-scheme: dark)" srcset="https://al-azab.co/images/logaz.gif">
+			<img src="https://al-azab.co/images/logaz.gif" alt="Alazab Technologies" height="32"/>
+		</picture>
+	</a>
+</div>
+
