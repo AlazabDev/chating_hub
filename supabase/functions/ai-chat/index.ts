@@ -106,8 +106,10 @@ serve(async (req) => {
 
     // استدعاء الذكاء الاصطناعي
     let aiResponse;
-    if (model === 'openai') {
+    if (model === 'azure-openai') {
       aiResponse = await callOpenAI(aiMessages);
+    } else if (model === 'claude') {
+      aiResponse = await callClaude(aiMessages);
     } else {
       aiResponse = await callDeepSeek(aiMessages);
     }
@@ -235,6 +237,31 @@ async function callDeepSeek(messages: any[]): Promise<string> {
   if (!response.ok) throw new Error(data.error?.message || 'DeepSeek API error');
   
   return data.choices[0].message.content;
+}
+
+async function callClaude(messages: any[]): Promise<string> {
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) throw new Error('Claude API key not configured');
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 4000,
+      messages: messages.filter(m => m.role !== 'system'),
+      system: messages.find(m => m.role === 'system')?.content || 'أنت مساعد ذكي متخصص في البرمجة.',
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error?.message || 'Claude API error');
+  
+  return data.content[0].text;
 }
 
 async function analyzeResponseForCodeSuggestions(

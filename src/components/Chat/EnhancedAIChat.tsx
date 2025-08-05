@@ -15,7 +15,7 @@ interface EnhancedAIChatProps {
 
 const EnhancedAIChat: React.FC<EnhancedAIChatProps> = ({ onConversationCreated }) => {
   const [currentMessage, setCurrentMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState<'deepseek' | 'azure-openai'>('deepseek');
+  const [selectedModel, setSelectedModel] = useState<'deepseek' | 'azure-openai' | 'claude'>('deepseek');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -60,11 +60,15 @@ const EnhancedAIChat: React.FC<EnhancedAIChatProps> = ({ onConversationCreated }
   };
 
   const getModelIcon = (model: string) => {
-    return model === 'deepseek' ? <Zap className="w-3 h-3" /> : <Bot className="w-3 h-3" />;
+    if (model === 'deepseek') return <Zap className="w-3 h-3" />;
+    if (model === 'claude') return <MessageSquare className="w-3 h-3" />;
+    return <Bot className="w-3 h-3" />;
   };
 
   const getModelName = (model: string) => {
-    return model === 'deepseek' ? 'DeepSeek' : 'Azure OpenAI';
+    if (model === 'deepseek') return 'DeepSeek';
+    if (model === 'claude') return 'Claude Code';
+    return 'Azure OpenAI';
   };
 
   return (
@@ -77,7 +81,7 @@ const EnhancedAIChat: React.FC<EnhancedAIChatProps> = ({ onConversationCreated }
           </CardTitle>
           <div className="flex items-center gap-2">
             <Select value={selectedModel} onValueChange={(value: any) => setSelectedModel(value)}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -91,6 +95,12 @@ const EnhancedAIChat: React.FC<EnhancedAIChatProps> = ({ onConversationCreated }
                   <div className="flex items-center gap-2">
                     <Bot className="w-3 h-3" />
                     Azure OpenAI
+                  </div>
+                </SelectItem>
+                <SelectItem value="claude">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-3 h-3" />
+                    Claude Code
                   </div>
                 </SelectItem>
               </SelectContent>
