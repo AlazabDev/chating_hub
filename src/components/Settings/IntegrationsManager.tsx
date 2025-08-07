@@ -108,6 +108,13 @@ const IntegrationsManager: React.FC = () => {
     try {
       setLoading(true);
       
+      // الحصول على بيانات المستخدم
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('المستخدم غير مصادق عليه');
+      }
+      
       // تشفير المفتاح
       const { data: encryptedKey, error: encryptError } = await supabase
         .rpc('encrypt_api_key', { key_value: newKey.key_value });
@@ -120,21 +127,23 @@ const IntegrationsManager: React.FC = () => {
           provider: newKey.provider,
           key_name: newKey.key_name,
           encrypted_key: encryptedKey,
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         });
 
       if (error) throw error;
 
       // إنشاء أو تحديث التكامل
-      await supabase
+      const { error: integrationError } = await supabase
         .from('integrations')
         .upsert({
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: user.id,
           integration_type: providers.find(p => p.id === newKey.provider)?.type || 'other',
           provider: newKey.provider,
           configuration: { key_name: newKey.key_name },
           is_enabled: true
         }, { onConflict: 'user_id,integration_type,provider' });
+
+      if (integrationError) throw integrationError;
 
       toast({
         title: "تم بنجاح",
