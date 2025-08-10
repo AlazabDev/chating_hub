@@ -918,6 +918,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string | null
           department_id: string | null
           email: string | null
@@ -928,10 +929,13 @@ export type Database = {
           phone: string | null
           reports_to: string | null
           role: Database["public"]["Enums"]["user_role"] | null
+          settings: Json | null
           updated_at: string | null
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           department_id?: string | null
           email?: string | null
@@ -942,10 +946,13 @@ export type Database = {
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          settings?: Json | null
           updated_at?: string | null
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string | null
           department_id?: string | null
           email?: string | null
@@ -956,7 +963,9 @@ export type Database = {
           phone?: string | null
           reports_to?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
+          settings?: Json | null
           updated_at?: string | null
+          username?: string | null
         }
         Relationships: [
           {
@@ -967,6 +976,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      project_code_files: {
+        Row: {
+          content: string
+          created_at: string
+          file_name: string
+          file_path: string
+          id: string
+          is_public: boolean | null
+          language: string
+          metadata: Json | null
+          project_id: string | null
+          size_bytes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          id?: string
+          is_public?: boolean | null
+          language?: string
+          metadata?: Json | null
+          project_id?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_public?: boolean | null
+          language?: string
+          metadata?: Json | null
+          project_id?: string | null
+          size_bytes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       project_files: {
         Row: {

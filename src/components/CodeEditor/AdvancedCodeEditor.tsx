@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,14 +24,21 @@ import {
   Folder
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { FileManager } from './FileManager';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/Auth/AuthProvider';
 
 interface CodeFile {
   id: string;
-  name: string;
+  file_name: string;
+  file_path: string;
   content: string;
   language: string;
-  path: string;
-  modified: boolean;
+  size_bytes: number;
+  is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  modified?: boolean;
 }
 
 interface AdvancedCodeEditorProps {
@@ -39,66 +46,53 @@ interface AdvancedCodeEditorProps {
 }
 
 export const AdvancedCodeEditor: React.FC<AdvancedCodeEditorProps> = ({ onClose }) => {
-  const [files, setFiles] = useState<CodeFile[]>([
-    {
-      id: '1',
-      name: 'main.tsx',
-      content: `import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);`,
-      language: 'typescript',
-      path: 'src/main.tsx',
-      modified: false
-    }
-  ]);
-  
-  const [activeFileId, setActiveFileId] = useState<string>('1');
+  const [activeFile, setActiveFile] = useState<CodeFile | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [output, setOutput] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFileManager, setShowFileManager] = useState(true);
   const { toast } = useToast();
-
-  const activeFile = files.find(f => f.id === activeFileId);
+  const { user } = useAuth();
 
   const handleContentChange = (newContent: string) => {
     if (!activeFile) return;
     
-    setFiles(prev => prev.map(file => 
-      file.id === activeFileId 
-        ? { ...file, content: newContent, modified: true }
-        : file
-    ));
+    setActiveFile(prev => prev ? { ...prev, content: newContent, modified: true } : null);
   };
 
   const handleSave = async () => {
-    if (!activeFile) return;
+    if (!activeFile || !user) return;
     
     try {
-      // محاكاة حفظ الملف
-      setFiles(prev => prev.map(file => 
-        file.id === activeFileId 
-          ? { ...file, modified: false }
-          : file
-      ));
+      const { error } = await supabase
+        .from('project_code_files')
+        .update({
+          content: activeFile.content,
+          size_bytes: new Blob([activeFile.content]).size,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', activeFile.id);
+
+      if (error) throw error;
+
+      setActiveFile(prev => prev ? { ...prev, modified: false } : null);
       
       toast({
         title: "تم الحفظ",
-        description: `تم حفظ ${activeFile.name} بنجاح`,
+        description: `تم حفظ ${activeFile.file_name} بنجاح`,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving file:', error);
       toast({
         title: "خطأ في الحفظ",
         description: "فشل في حفظ الملف",
         variant: "destructive"
       });
     }
+  };
+
+  const handleFileSelect = (file: CodeFile) => {
+    setActiveFile({ ...file, modified: false });
   };
 
   const handleRun = async () => {
@@ -119,19 +113,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     setOutput(prev => prev + '\n❌ تم إيقاف التشغيل\n');
   };
 
-  const handleNewFile = () => {
-    const newFile: CodeFile = {
-      id: Date.now().toString(),
-      name: 'untitled.js',
-      content: '// ملف جديد\nconsole.log("مرحبا بالعالم!");',
-      language: 'javascript',
-      path: 'src/untitled.js',
-      modified: true
-    };
-    
-    setFiles(prev => [...prev, newFile]);
-    setActiveFileId(newFile.id);
-  };
+  if (!user) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gradient-card border border-border rounded-lg">
+        <div className="text-center">
+          <h2 className="text-lg font-medium text-foreground mb-2">محرر الكود المتقدم</h2>
+          <p className="text-muted-foreground mb-4">يرجى تسجيل الدخول لاستخدام محرر الكود</p>
+          <Button onClick={() => window.location.href = '/auth'}>
+            تسجيل الدخول
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const getLanguageBadge = (language: string) => {
     const colors: Record<string, string> = {
@@ -161,15 +155,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </div>
         
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNewFile}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            ملف جديد
-          </Button>
+          {/* ملف جديد يتم إنشاؤه من خلال FileManager */}
           
           {activeFile && (
             <Button
@@ -217,27 +203,31 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         </div>
       </div>
 
-      {/* File Tabs */}
-      <div className="flex items-center gap-1 p-2 border-b border-border bg-muted/30">
-        <ScrollArea className="flex-1">
-          <div className="flex gap-1">
-            {files.map((file) => (
-              <Button
-                key={file.id}
-                variant={activeFileId === file.id ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveFileId(file.id)}
-                className="flex items-center gap-2 min-w-0"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="truncate max-w-32">{file.name}</span>
-                {file.modified && (
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                )}
-              </Button>
-            ))}
-          </div>
-        </ScrollArea>
+      {/* File Manager Toggle */}
+      <div className="flex items-center justify-between p-2 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFileManager(!showFileManager)}
+            className="flex items-center gap-2"
+          >
+            <Folder className="w-4 h-4" />
+            {showFileManager ? 'إخفاء الملفات' : 'عرض الملفات'}
+          </Button>
+          
+          {activeFile && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText className="w-4 h-4" />
+              <span>{activeFile.file_name}</span>
+              {activeFile.modified && (
+                <Badge variant="outline" className="text-yellow-500 border-yellow-500 text-xs">
+                  معدل
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Search Bar */}
@@ -256,14 +246,24 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
       {/* Main Content */}
       <div className="flex-1 flex">
+        {/* File Manager */}
+        {showFileManager && (
+          <div className="w-80 border-l border-border">
+            <FileManager 
+              onFileSelect={handleFileSelect}
+              selectedFileId={activeFile?.id}
+            />
+          </div>
+        )}
+        
         {/* Editor */}
         <div className="flex-1 flex flex-col">
-          {activeFile && (
+          {activeFile ? (
             <>
               {/* File Info */}
               <div className="flex items-center justify-between p-3 border-b border-border bg-muted/20">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{activeFile.name}</span>
+                  <span className="text-sm font-medium">{activeFile.file_name}</span>
                   {getLanguageBadge(activeFile.language)}
                   {activeFile.modified && (
                     <Badge variant="outline" className="text-yellow-500 border-yellow-500">
@@ -272,7 +272,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     </Badge>
                   )}
                 </div>
-                <span className="text-xs text-muted-foreground">{activeFile.path}</span>
+                <span className="text-xs text-muted-foreground">{activeFile.file_path}</span>
               </div>
               
               {/* Code Editor */}
@@ -292,6 +292,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                   <span>الأسطر: {activeFile.content.split('\n').length}</span>
                   <span>الأحرف: {activeFile.content.length}</span>
                   <span>اللغة: {activeFile.language}</span>
+                  <span>الحجم: {(new Blob([activeFile.content]).size / 1024).toFixed(1)} KB</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Settings className="w-3 h-3" />
@@ -299,6 +300,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                 </div>
               </div>
             </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>اختر ملفاً من إدارة الملفات للبدء في التحرير</p>
+              </div>
+            </div>
           )}
         </div>
 

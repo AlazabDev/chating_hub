@@ -73,6 +73,17 @@ const IntegrationsManager: React.FC = () => {
 
   const loadData = async () => {
     try {
+      // التحقق من وجود المستخدم أولاً
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        console.log('المستخدم غير مصادق عليه');
+        setApiKeys([]);
+        setIntegrations([]);
+        setLoading(false);
+        return;
+      }
+
       const [keysResponse, integrationsResponse] = await Promise.all([
         supabase.from('api_keys').select('*').order('created_at', { ascending: false }),
         supabase.from('integrations').select('*').order('created_at', { ascending: false })

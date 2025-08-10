@@ -1,189 +1,101 @@
-
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import ClaudeChatInterface from '@/components/Chat/ClaudeChatInterface';
-import EnhancedAIChat from '@/components/Chat/EnhancedAIChat';
-import GoogleDriveManager from '@/components/FileManager/GoogleDriveManager';
-import { ProjectSidebar } from '@/components/Sidebar/ProjectSidebar';
-import { AdvancedCodeEditor } from '@/components/CodeEditor/AdvancedCodeEditor';
-import RepositoryManager from '@/components/Repository/RepositoryManager';
-import DashboardAnalytics from '@/components/Analytics/DashboardAnalytics';
-import SystemSettings from '@/components/Settings/SystemSettings';
-import ProductionDashboard from '@/components/Production/ProductionDashboard';
-import AIStatusOverview from '@/components/AI/AIStatusOverview';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Folder, Code, GitBranch, Terminal, Settings, BarChart3, Zap, Rocket, Activity } from 'lucide-react';
-import { AIConnectionTester } from '@/components/AI/AIConnectionTester';
-
-interface ContextFile {
-  id: string;
-  name: string;
-  content: string;
-}
-
-interface ProjectFile {
-  id: string;
-  name: string;
-  type: 'file' | 'folder';
-  path: string;
-  language?: string;
-  size?: number;
-  modified?: Date;
-  status?: 'modified' | 'added' | 'deleted';
-}
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { AdvancedCodeEditor } from "@/components/CodeEditor/AdvancedCodeEditor";
+import EnhancedAIPlatform from "@/components/AI/EnhancedAIPlatform";
+import ProductionDashboard from "@/components/Production/ProductionDashboard";
+import { AppHeader } from "@/components/Header/AppHeader";
+import { ProjectSidebar } from "@/components/Sidebar/ProjectSidebar";
+import SystemSettings from "@/components/Settings/SystemSettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/components/Auth/AuthProvider";
+import { useNavigate } from "react-router-dom";
+import { 
+  Code, 
+  Bot, 
+  Cloud, 
+  Settings, 
+  Menu, 
+  X,
+  Sparkles,
+  LogIn
+} from "lucide-react";
 
 const Index = () => {
-  const [contextFiles, setContextFiles] = useState<ContextFile[]>([]);
-  const [selectedDriveFiles, setSelectedDriveFiles] = useState<any[]>([]);
-  const [showCodeEditor, setShowCodeEditor] = useState(false);
+  const [activeTab, setActiveTab] = useState("ai");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  const handleDriveFileSelect = (file: any, content: string) => {
-    const contextFile: ContextFile = {
-      id: file.id,
-      name: file.name,
-      content
-    };
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
 
-    if (!contextFiles.find(f => f.id === file.id)) {
-      setContextFiles(prev => [...prev, contextFile]);
-      setSelectedDriveFiles(prev => [...prev, file]);
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      navigate('/auth');
     }
   };
 
-  const handleFileRequest = () => {
-    // This will focus the Google Drive tab
-    // In a more complete implementation, you could open a modal or switch tabs
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
-  const handleProjectFileSelect = (file: ProjectFile) => {
-    console.log('Selected file:', file);
-    if (file.type === 'file') {
-      setShowCodeEditor(true);
-    }
-  };
-
-  const handleCommandExecute = (command: string) => {
-    console.log('Executing command:', command);
-  };
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">منصة التطوير المتقدمة</h1>
+          <Button onClick={() => navigate('/auth')} size="lg">
+            <LogIn className="w-5 h-5 mr-2" />
+            تسجيل الدخول
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <ProjectSidebar 
-        onFileSelect={handleProjectFileSelect}
-        onCommandExecute={handleCommandExecute}
-      />
-      
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-border bg-gradient-card">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              منصة الذكاء الاصطناعي المتكاملة
-            </h1>
-            <p className="text-muted-foreground">
-              دردش مع Claude، أدر ملفاتك في Google Drive، وطور مشاريعك بكفاءة
-            </p>
-          </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 p-6">
-          {showCodeEditor ? (
-            <AdvancedCodeEditor onClose={() => setShowCodeEditor(false)} />
-          ) : (
-            <Tabs defaultValue="chat" className="h-full">
-              <TabsList className="grid w-full grid-cols-9 mb-6">
-                <TabsTrigger value="chat" className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4" />
-                  Claude
-                </TabsTrigger>
-                <TabsTrigger value="ai-chat" className="flex items-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  ذكاء متقدم
-                </TabsTrigger>
-                <TabsTrigger value="files" className="flex items-center gap-2">
-                  <Folder className="w-4 h-4" />
-                  إدارة الملفات
-                </TabsTrigger>
-                <TabsTrigger value="code" className="flex items-center gap-2" onClick={() => setShowCodeEditor(true)}>
-                  <Code className="w-4 h-4" />
-                  محرر الكود
-                </TabsTrigger>
-                <TabsTrigger value="repositories" className="flex items-center gap-2">
-                  <GitBranch className="w-4 h-4" />
-                  المستودعات
-                </TabsTrigger>
-                <TabsTrigger value="production" className="flex items-center gap-2">
-                  <Rocket className="w-4 h-4" />
-                  الإنتاج
-                </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  التحليلات
-                </TabsTrigger>
-                <TabsTrigger value="ai-status" className="flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  حالة الذكاء
-                </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  الإعدادات
-                </TabsTrigger>
+    <div className="min-h-screen bg-background">
+      <div className="flex h-screen">
+        <div className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+            <div className="border-b p-4">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="ai"><Bot className="w-4 h-4 mr-2" />الذكاء الاصطناعي</TabsTrigger>
+                <TabsTrigger value="code"><Code className="w-4 h-4 mr-2" />محرر الكود</TabsTrigger>
+                <TabsTrigger value="production"><Cloud className="w-4 h-4 mr-2" />الإنتاج</TabsTrigger>
+                <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-2" />الإعدادات</TabsTrigger>
               </TabsList>
+            </div>
 
-              <TabsContent value="chat" className="h-full">
-                <div className="h-full">
-                  <ClaudeChatInterface
-                    contextFiles={contextFiles}
-                    onFileRequest={handleFileRequest}
-                  />
-                </div>
-              </TabsContent>
+            <TabsContent value="ai" className="flex-1">
+              <EnhancedAIPlatform 
+                onSendMessage={() => {}}
+                messages={[]}
+                isLoading={false}
+                modelStatus={{ deepseek: true, openai: true, claude: true }}
+              />
+            </TabsContent>
 
-              <TabsContent value="ai-chat" className="h-full">
-                <div className="h-full">
-                  <EnhancedAIChat />
-                </div>
-              </TabsContent>
+            <TabsContent value="code" className="flex-1">
+              <AdvancedCodeEditor />
+            </TabsContent>
 
-              <TabsContent value="files" className="h-full">
-                <div className="h-full">
-                  <GoogleDriveManager
-                    onFileSelect={handleDriveFileSelect}
-                    selectedFiles={selectedDriveFiles}
-                  />
-                </div>
-              </TabsContent>
+            <TabsContent value="production" className="flex-1">
+              <ProductionDashboard />
+            </TabsContent>
 
-              <TabsContent value="code" className="h-full">
-                {/* This will be handled by the showCodeEditor state */}
-              </TabsContent>
-
-              <TabsContent value="repositories" className="h-full">
-                <RepositoryManager />
-              </TabsContent>
-
-              <TabsContent value="production" className="h-full">
-                <ProductionDashboard />
-              </TabsContent>
-
-              <TabsContent value="analytics" className="h-full">
-                <DashboardAnalytics />
-              </TabsContent>
-
-              <TabsContent value="ai-status" className="h-full">
-                <AIStatusOverview />
-              </TabsContent>
-
-              <TabsContent value="settings" className="h-full">
-                <SystemSettings />
-              </TabsContent>
-            </Tabs>
-          )}
+            <TabsContent value="settings" className="flex-1">
+              <SystemSettings />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
