@@ -5,12 +5,13 @@ import { Badge } from '@/components/ui/badge';
 import { Bot, MessageSquare, Database, CheckCircle, AlertTriangle } from 'lucide-react';
 
 interface EnhancedAIPlatformProps {
-  onSendMessage: (content: string, model: 'deepseek' | 'azure-openai') => Promise<void>;
+  onSendMessage: (content: string, model: 'deepseek' | 'azure-openai' | 'claude') => Promise<void>;
   messages: any[];
   isLoading: boolean;
   modelStatus: {
     deepseek: boolean;
     azureOpenAI: boolean;
+    claude: boolean;
   };
 }
 
@@ -50,6 +51,18 @@ const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
                     <AlertTriangle className="w-3 h-3 mr-1" />
                   )}
                   {modelStatus.azureOpenAI ? 'متصل' : 'غير متصل'}
+                </Badge>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Claude</span>
+                <Badge variant={modelStatus.claude ? "default" : "secondary"}>
+                  {modelStatus.claude ? (
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                  ) : (
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                  )}
+                  {modelStatus.claude ? 'متصل' : 'غير متصل'}
                 </Badge>
               </div>
             </div>

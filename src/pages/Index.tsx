@@ -3,28 +3,26 @@ import { Button } from "@/components/ui/button";
 import { AdvancedCodeEditor } from "@/components/CodeEditor/AdvancedCodeEditor";
 import EnhancedAIPlatform from "@/components/AI/EnhancedAIPlatform";
 import ProductionDashboard from "@/components/Production/ProductionDashboard";
-import { AppHeader } from "@/components/Header/AppHeader";
-import { ProjectSidebar } from "@/components/Sidebar/ProjectSidebar";
 import SystemSettings from "@/components/Settings/SystemSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import { useAIConversation } from "@/hooks/useAIConversation";
 import { useNavigate } from "react-router-dom";
 import { 
   Code, 
   Bot, 
   Cloud, 
   Settings, 
-  Menu, 
-  X,
-  Sparkles,
-  LogIn
+  LogIn,
+  Github,
+  MessageSquare
 } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("ai");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { messages, loading: aiLoading, sendMessage } = useAIConversation();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -68,19 +66,21 @@ const Index = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <div className="border-b p-4">
               <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="ai"><Bot className="w-4 h-4 mr-2" />الذكاء الاصطناعي</TabsTrigger>
+                <TabsTrigger value="ai"><MessageSquare className="w-4 h-4 mr-2" />مساعد التطوير</TabsTrigger>
                 <TabsTrigger value="code"><Code className="w-4 h-4 mr-2" />محرر الكود</TabsTrigger>
-                <TabsTrigger value="production"><Cloud className="w-4 h-4 mr-2" />الإنتاج</TabsTrigger>
+                <TabsTrigger value="production"><Github className="w-4 h-4 mr-2" />GitHub</TabsTrigger>
                 <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-2" />الإعدادات</TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value="ai" className="flex-1">
               <EnhancedAIPlatform 
-                onSendMessage={() => {}}
-                messages={[]}
-                isLoading={false}
-                modelStatus={{ deepseek: true, openai: true, claude: true }}
+                onSendMessage={async (content: string, model: "deepseek" | "azure-openai" | "claude") => {
+                  await sendMessage(content, model);
+                }}
+                messages={messages}
+                isLoading={aiLoading}
+                modelStatus={{ deepseek: true, azureOpenAI: true, claude: true }}
               />
             </TabsContent>
 
