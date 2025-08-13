@@ -5,9 +5,10 @@ import EnhancedAIPlatform from "@/components/AI/EnhancedAIPlatform";
 import ProductionDashboard from "@/components/Production/ProductionDashboard";
 import SystemSettings from "@/components/Settings/SystemSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { ChatSidebar } from "@/components/Chat/ChatSidebar";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { useAIConversation } from "@/hooks/useAIConversation";
-import ConversationHistory from "@/components/AI/ConversationHistory";
 import { useNavigate } from "react-router-dom";
 import { 
   Code, 
@@ -16,7 +17,8 @@ import {
   Settings, 
   LogIn,
   Github,
-  MessageSquare
+  MessageSquare,
+  Menu
 } from "lucide-react";
 
 const Index = () => {
@@ -69,57 +71,91 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
-        <div className="flex-1 flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <div className="border-b p-4">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="ai"><MessageSquare className="w-4 h-4 mr-2" />مساعد التطوير</TabsTrigger>
-                <TabsTrigger value="code"><Code className="w-4 h-4 mr-2" />محرر الكود</TabsTrigger>
-                <TabsTrigger value="production"><Github className="w-4 h-4 mr-2" />GitHub</TabsTrigger>
-                <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-2" />الإعدادات</TabsTrigger>
-              </TabsList>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background w-full">
+        <div className="flex h-screen w-full">
+          <div className="flex-1 flex flex-col">
+            {/* Header with Sidebar Trigger */}
+            <div className="header-glass border-b px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="hover:bg-muted p-2 rounded-md transition-colors" />
+                <h1 className="text-xl font-bold">منصة التطوير المتقدمة</h1>
+              </div>
+              <Button 
+                onClick={handleSignOut}
+                variant="outline"
+                size="sm"
+                className="hover-lift"
+              >
+                تسجيل الخروج
+              </Button>
             </div>
 
-            <TabsContent value="ai" className="flex-1 p-0">
-              <div className="flex h-full">
-                <div className="w-80 border-r bg-sidebar/30 p-4">
-                  <ConversationHistory 
-                    onSelectConversation={loadConversation}
-                    currentConversationId={currentConversationId}
-                  />
-                </div>
-                <div className="flex-1">
-                  <EnhancedAIPlatform 
-                    onSendMessage={async (content: string, model: "deepseek" | "azure-openai" | "claude") => {
-                      await sendMessage(content, model);
-                    }}
-                    messages={messages}
-                    isLoading={aiLoading}
-                    modelStatus={{ deepseek: true, azureOpenAI: true, claude: true }}
-                    onClearConversation={clearConversation}
-                    onNewConversation={startNewConversation}
-                  />
-                </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <div className="border-b p-4">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="ai" className="tab-enhanced">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    مساعد التطوير
+                  </TabsTrigger>
+                  <TabsTrigger value="code" className="tab-enhanced">
+                    <Code className="w-4 h-4 mr-2" />
+                    محرر الكود
+                  </TabsTrigger>
+                  <TabsTrigger value="production" className="tab-enhanced">
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub
+                  </TabsTrigger>
+                  <TabsTrigger value="settings" className="tab-enhanced">
+                    <Settings className="w-4 h-4 mr-2" />
+                    الإعدادات
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </TabsContent>
 
-            <TabsContent value="code" className="flex-1">
-              <AdvancedCodeEditor />
-            </TabsContent>
+              <div className="flex-1 flex overflow-hidden">
+                <TabsContent value="ai" className="flex-1 m-0 flex">
+                  <div className="flex h-full w-full">
+                    <ChatSidebar 
+                      conversations={[]}
+                      currentConversationId={currentConversationId}
+                      onSelectConversation={loadConversation}
+                      onNewConversation={startNewConversation}
+                      onClearConversation={clearConversation}
+                      isLoading={aiLoading}
+                    />
+                    <div className="flex-1">
+                      <EnhancedAIPlatform 
+                        onSendMessage={async (content: string, model: "deepseek" | "azure-openai" | "claude") => {
+                          await sendMessage(content, model);
+                        }}
+                        messages={messages}
+                        isLoading={aiLoading}
+                        modelStatus={{ deepseek: true, azureOpenAI: true, claude: true }}
+                        onClearConversation={clearConversation}
+                        onNewConversation={startNewConversation}
+                      />
+                    </div>
+                  </div>
+                </TabsContent>
 
-            <TabsContent value="production" className="flex-1">
-              <ProductionDashboard />
-            </TabsContent>
+                <TabsContent value="code" className="flex-1 m-0">
+                  <AdvancedCodeEditor />
+                </TabsContent>
 
-            <TabsContent value="settings" className="flex-1">
-              <SystemSettings />
-            </TabsContent>
-          </Tabs>
+                <TabsContent value="production" className="flex-1 m-0">
+                  <ProductionDashboard />
+                </TabsContent>
+
+                <TabsContent value="settings" className="flex-1 m-0">
+                  <SystemSettings />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
         </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
