@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Bot, MessageSquare, Database, CheckCircle, AlertTriangle } from 'lucide-react';
+import MainChatInterface from '../Chat/MainChatInterface';
 
 interface EnhancedAIPlatformProps {
   onSendMessage: (content: string, model: 'deepseek' | 'azure-openai' | 'claude') => Promise<void>;
@@ -13,14 +14,34 @@ interface EnhancedAIPlatformProps {
     azureOpenAI: boolean;
     claude: boolean;
   };
+  onClearConversation: () => void;
+  onNewConversation: () => void;
 }
 
 const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
-  modelStatus
+  onSendMessage,
+  messages,
+  isLoading,
+  modelStatus,
+  onClearConversation,
+  onNewConversation
 }) => {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="flex h-full gap-6">
+      {/* Chat Interface - Main Area */}
+      <div className="flex-1">
+        <MainChatInterface
+          messages={messages}
+          onSendMessage={onSendMessage}
+          isLoading={isLoading}
+          onClearConversation={onClearConversation}
+          onNewConversation={onNewConversation}
+        />
+      </div>
+      
+      {/* Sidebar with Status and Stats */}
+      <div className="w-80 space-y-4">
+        <div className="grid grid-cols-1 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -110,6 +131,7 @@ const EnhancedAIPlatform: React.FC<EnhancedAIPlatformProps> = ({
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import SystemSettings from "@/components/Settings/SystemSettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { useAIConversation } from "@/hooks/useAIConversation";
+import ConversationHistory from "@/components/AI/ConversationHistory";
 import { useNavigate } from "react-router-dom";
 import { 
   Code, 
@@ -22,7 +23,15 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("ai");
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const { messages, loading: aiLoading, sendMessage } = useAIConversation();
+  const { 
+    messages, 
+    loading: aiLoading, 
+    sendMessage, 
+    clearConversation, 
+    startNewConversation,
+    loadConversation,
+    currentConversationId 
+  } = useAIConversation();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -73,15 +82,27 @@ const Index = () => {
               </TabsList>
             </div>
 
-            <TabsContent value="ai" className="flex-1">
-              <EnhancedAIPlatform 
-                onSendMessage={async (content: string, model: "deepseek" | "azure-openai" | "claude") => {
-                  await sendMessage(content, model);
-                }}
-                messages={messages}
-                isLoading={aiLoading}
-                modelStatus={{ deepseek: true, azureOpenAI: true, claude: true }}
-              />
+            <TabsContent value="ai" className="flex-1 p-0">
+              <div className="flex h-full">
+                <div className="w-80 border-r bg-sidebar/30 p-4">
+                  <ConversationHistory 
+                    onSelectConversation={loadConversation}
+                    currentConversationId={currentConversationId}
+                  />
+                </div>
+                <div className="flex-1">
+                  <EnhancedAIPlatform 
+                    onSendMessage={async (content: string, model: "deepseek" | "azure-openai" | "claude") => {
+                      await sendMessage(content, model);
+                    }}
+                    messages={messages}
+                    isLoading={aiLoading}
+                    modelStatus={{ deepseek: true, azureOpenAI: true, claude: true }}
+                    onClearConversation={clearConversation}
+                    onNewConversation={startNewConversation}
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="code" className="flex-1">
