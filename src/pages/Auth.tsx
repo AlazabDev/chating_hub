@@ -179,6 +179,18 @@ const Auth: React.FC = () => {
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     تسجيل الدخول
                   </Button>
+                  
+                  {/* Development bypass button */}
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="w-full text-sm"
+                      onClick={() => navigate('/')}
+                    >
+                      تجاوز المصادقة للتطوير
+                    </Button>
+                  </div>
                 </form>
               </TabsContent>
 

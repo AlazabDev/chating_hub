@@ -35,11 +35,12 @@ const Index = () => {
     currentConversationId 
   } = useAIConversation();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    }
-  }, [user, loading, navigate]);
+  // Temporarily disable auth check for development
+  // useEffect(() => {
+  //   if (!loading && !user) {
+  //     navigate('/auth');
+  //   }
+  // }, [user, loading, navigate]);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
