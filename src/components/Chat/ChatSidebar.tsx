@@ -41,7 +41,7 @@ export function ChatSidebar({
 
   return (
     <Sidebar className={isCollapsed ? "w-14" : "w-80"} collapsible="icon">
-      <SidebarContent className="bg-sidebar/90 backdrop-blur-lg">
+      <SidebarContent className="bg-card/50 backdrop-blur-lg border-r">
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center justify-between">
             {!isCollapsed && (
